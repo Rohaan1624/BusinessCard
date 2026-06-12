@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Download, Eye, PencilLine, Trash2, Wallet, Wand2 } from 'lucide-react'
+import { Ban, Download, Eye, PencilLine, Trash2, Wallet, Wand2 } from 'lucide-react'
 import { toPng } from 'html-to-image'
 import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
@@ -219,6 +219,14 @@ export default function Editor() {
     const previous = { theme: card.theme, bg_image_url: card.bg_image_url }
     applyAndSave({ theme: { ...DEFAULT_THEME, ...t.theme }, bg_image_url: t.bg })
     toast.success(`${t.label} template applied`, {
+      action: { label: 'Undo', onClick: () => applyAndSave(previous) },
+    })
+  }
+
+  function clearTemplate() {
+    const previous = { theme: card.theme, bg_image_url: card.bg_image_url }
+    applyAndSave({ theme: { ...DEFAULT_THEME }, bg_image_url: null })
+    toast.success('Back to the default design', {
       action: { label: 'Undo', onClick: () => applyAndSave(previous) },
     })
   }
@@ -493,6 +501,20 @@ export default function Editor() {
               <div className="space-y-2">
                 <span className="text-sm font-medium">Templates</span>
                 <div className="flex gap-3 overflow-x-auto pb-2">
+                  <button
+                    type="button"
+                    onClick={clearTemplate}
+                    className="group w-24 shrink-0 text-center"
+                  >
+                    <span
+                      className={`flex h-16 w-24 items-center justify-center rounded-lg bg-background ring-1 ring-border transition group-hover:ring-primary/60 ${
+                        !card.bg_image_url ? 'ring-2 ring-primary' : ''
+                      }`}
+                    >
+                      <Ban className="size-5 text-muted-foreground" />
+                    </span>
+                    <span className="mt-1 block truncate text-xs text-muted-foreground">None</span>
+                  </button>
                   {TEMPLATES.map((t) => (
                     <button
                       key={t.id}
