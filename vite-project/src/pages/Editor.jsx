@@ -120,6 +120,7 @@ export default function Editor() {
       .from('cards')
       .select('*')
       .eq('id', cardId)
+      .eq('user_id', user.id) // never open someone else's (public) card in the editor
       .single()
       .then(({ data, error }) => {
         if (error) setLoadError('Card not found, or you do not have access to it.')
@@ -128,7 +129,7 @@ export default function Editor() {
           setCard(data)
         }
       })
-  }, [cardId])
+  }, [cardId, user.id])
 
   const persist = useCallback(async (next) => {
     setSaveState('saving')
@@ -239,12 +240,17 @@ export default function Editor() {
   // Memoized: it's a dependency of the PayPal buttons effect, and a new
   // identity on every keystroke would tear the buttons down mid-checkout.
   const refreshAfterPayment = useCallback(async () => {
-    const { data } = await supabase.from('cards').select('*').eq('id', cardId).single()
+    const { data } = await supabase
+      .from('cards')
+      .select('*')
+      .eq('id', cardId)
+      .eq('user_id', user.id)
+      .single()
     if (data) {
       skipNextSave.current = true
       setCard(data)
     }
-  }, [cardId])
+  }, [cardId, user.id])
 
   async function addToWallet() {
     setWalletBusy(true)

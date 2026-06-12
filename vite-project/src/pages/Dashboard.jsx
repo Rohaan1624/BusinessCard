@@ -26,6 +26,9 @@ export default function Dashboard() {
     supabase
       .from('cards')
       .select('id, slug, full_name, company, status, updated_at')
+      // RLS also lets any signed-in user read *published* cards (that powers
+      // the public card page) — the dashboard must scope to the owner.
+      .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .then(({ data, error }) => {
         if (cancelled) return
@@ -35,7 +38,7 @@ export default function Dashboard() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [user.id])
 
   async function createCard() {
     setCreating(true)
