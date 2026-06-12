@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Eye, PencilLine, Trash2, Wallet, Wand2 } from 'lucide-react'
+import { Download, Eye, PencilLine, Trash2, Wallet, Wand2 } from 'lucide-react'
+import { toPng } from 'html-to-image'
 import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/auth-context'
@@ -23,6 +24,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import AppHeader from '../components/AppHeader'
 import CardPreview from '../components/CardPreview'
+import CardWithQR from '../components/CardWithQR'
 import QRCodeBlock from '../components/QRCodeBlock'
 import PayPalCheckout from '../components/PayPalCheckout'
 import CouponRedeem from '../components/CouponRedeem'
@@ -107,6 +109,8 @@ export default function Editor() {
   const [uploading, setUploading] = useState(null) // 'logo' | 'photo' | null
   const [walletBusy, setWalletBusy] = useState(false)
   const [pane, setPane] = useState('edit') // mobile: 'edit' | 'preview'
+  const [snapshotBusy, setSnapshotBusy] = useState(false)
+  const qrCardRef = useRef(null)
   const saveTimer = useRef(null)
   const skipNextSave = useRef(true)
   const dirtyRef = useRef(false)
@@ -251,6 +255,24 @@ export default function Editor() {
       setCard(data)
     }
   }, [cardId, user.id])
+
+  async function downloadCardPng() {
+    if (!qrCardRef.current) return
+    setSnapshotBusy(true)
+    try {
+      const dataUrl = await toPng(qrCardRef.current, { pixelRatio: 3, cacheBust: true })
+      const a = document.createElement('a')
+      a.href = dataUrl
+      a.download = `${card.slug}-card.png`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    } catch (e) {
+      toast.error(`Could not render the image: ${e.message}`)
+    } finally {
+      setSnapshotBusy(false)
+    }
+  }
 
   async function addToWallet() {
     setWalletBusy(true)
@@ -673,6 +695,19 @@ export default function Editor() {
         >
           <div className="flex justify-center">
             <CardPreview card={card} />
+          </div>
+
+          <div className="flex flex-col items-center gap-3">
+            <span className="text-sm font-medium text-muted-foreground">With QR code</span>
+            <div ref={qrCardRef} className="flex justify-center">
+              <CardWithQR card={card} locked={!isPaid} />
+            </div>
+            {isPaid && (
+              <Button variant="outline" onClick={downloadCardPng} disabled={snapshotBusy}>
+                <Download className="size-4" />
+                {snapshotBusy ? 'Rendering…' : 'Download card PNG'}
+              </Button>
+            )}
           </div>
 
           <Card>

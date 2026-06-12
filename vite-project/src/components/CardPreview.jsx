@@ -16,7 +16,7 @@ function ContactRow({ icon, label, href }) {
   )
 }
 
-export default function CardPreview({ card }) {
+export default function CardPreview({ card, footer = null }) {
   const theme = { ...DEFAULT_THEME, ...(card.theme || {}) }
   const style = {
     '--card-accent': theme.accent,
@@ -111,6 +111,8 @@ export default function CardPreview({ card }) {
           ))}
         </div>
       )}
+
+      {footer}
     </div>
   )
 }

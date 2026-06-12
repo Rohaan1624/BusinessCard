@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ExternalLink, Pencil, Plus } from 'lucide-react'
+import { ExternalLink, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/auth-context'
@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog'
 import AppHeader from '../components/AppHeader'
 
 function randomSlug() {
@@ -20,6 +23,8 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [cards, setCards] = useState(null)
   const [creating, setCreating] = useState(false)
+  const [toDelete, setToDelete] = useState(null) // card pending confirm
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -59,6 +64,24 @@ export default function Dashboard() {
       }
     }
     setCreating(false)
+  }
+
+  async function deleteCard() {
+    if (!toDelete) return
+    setDeleting(true)
+    const { error } = await supabase
+      .from('cards')
+      .delete()
+      .eq('id', toDelete.id)
+      .eq('status', 'draft')
+    setDeleting(false)
+    if (error) {
+      toast.error(`Could not delete: ${error.message}`)
+    } else {
+      setCards((list) => list.filter((c) => c.id !== toDelete.id))
+      toast.success('Draft deleted')
+    }
+    setToDelete(null)
   }
 
   async function signOut() {
@@ -104,7 +127,19 @@ export default function Dashboard() {
 
         <div className="space-y-3">
           {cards?.map((c) => (
-            <Card key={c.id}>
+            <Card
+              key={c.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/editor/${c.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  navigate(`/editor/${c.id}`)
+                }
+              }}
+              className="cursor-pointer transition hover:border-primary/40 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="truncate font-semibold">
@@ -114,25 +149,50 @@ export default function Dashboard() {
                     {c.status === 'paid' ? 'Published' : 'Draft'}
                   </Badge>
                 </div>
-                <div className="flex gap-2">
-                  {c.status === 'paid' && (
+                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                  {c.status === 'paid' ? (
                     <Button asChild variant="outline" size="sm">
                       <Link to={`/c/${c.slug}`} target="_blank">
                         <ExternalLink className="size-4" /> View
                       </Link>
                     </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      aria-label="Delete draft"
+                      onClick={() => setToDelete(c)}
+                    >
+                      <Trash2 className="size-4" /> Delete
+                    </Button>
                   )}
-                  <Button asChild size="sm" variant="secondary">
-                    <Link to={`/editor/${c.id}`}>
-                      <Pencil className="size-4" /> Edit
-                    </Link>
-                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       </main>
+
+      <Dialog open={!!toDelete} onOpenChange={(open) => !open && setToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this draft?</DialogTitle>
+            <DialogDescription>
+              "{toDelete?.full_name || toDelete?.company || 'Untitled card'}" will be permanently
+              deleted. This can't be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setToDelete(null)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={deleteCard} disabled={deleting}>
+              {deleting ? 'Deleting…' : 'Delete draft'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
