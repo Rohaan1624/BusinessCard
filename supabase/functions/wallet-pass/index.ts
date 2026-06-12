@@ -108,11 +108,15 @@ Deno.serve(async (req) => {
       await admin.from('cards').update({ wallet_serial: pass.serialNumber }).eq('id', card.id)
     }
 
+    // PUT (update) responses carry no pass file — only { serialNumber,
+    // lastUpdated, notifiedDevices, unchanged }. The hosted install page at
+    // /p/<serial> always serves the current pass, so fall back to it.
+    const serial = pass.serialNumber ?? card.wallet_serial
     return json({
-      applePass: pass.applePass,
-      serialNumber: pass.serialNumber,
-      shareUrl: pass.shareUrl,
-      googleSaveUrl: pass.googleSaveUrl,
+      applePass: pass.applePass ?? null,
+      serialNumber: serial,
+      shareUrl: pass.shareUrl ?? `https://api.walletwallet.dev/p/${serial}`,
+      googleSaveUrl: pass.googleSaveUrl ?? null,
     })
   } catch (e) {
     console.error(e)

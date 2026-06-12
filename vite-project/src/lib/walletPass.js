@@ -1,7 +1,13 @@
 import { supabase } from './supabase'
 
-// Asks the wallet-pass edge function for a signed .pkpass and triggers the download.
-// On iOS Safari the download prompt is the native "Add to Apple Wallet" sheet.
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+}
+
+// Asks the wallet-pass edge function for the pass, then either downloads the
+// .pkpass (desktop) or navigates to WalletWallet's hosted install page —
+// the reliable path on iOS, and the only one for pass *updates*, whose API
+// responses carry no pass file.
 export async function downloadWalletPass(cardId) {
   const { data, error } = await supabase.functions.invoke('wallet-pass', {
     body: { cardId },
@@ -13,6 +19,12 @@ export async function downloadWalletPass(cardId) {
       if (body?.error) detail = body.error
     } catch { /* keep generic message */ }
     throw new Error(detail || 'Could not create the Wallet pass.')
+  }
+
+  if (!data.applePass || isIOS()) {
+    if (!data.shareUrl) throw new Error('Could not create the Wallet pass.')
+    window.location.assign(data.shareUrl)
+    return data
   }
 
   const bytes = Uint8Array.from(atob(data.applePass), (c) => c.charCodeAt(0))
