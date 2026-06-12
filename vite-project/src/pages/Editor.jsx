@@ -109,6 +109,11 @@ export default function Editor() {
   const [pane, setPane] = useState('edit') // mobile: 'edit' | 'preview'
   const saveTimer = useRef(null)
   const skipNextSave = useRef(true)
+  const dirtyRef = useRef(false)
+  const cardRef = useRef(null)
+  useEffect(() => {
+    cardRef.current = card
+  }, [card])
 
   useEffect(() => {
     supabase
@@ -153,14 +158,39 @@ export default function Editor() {
       return
     }
     setSaveState('saving')
+    dirtyRef.current = true
     clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => persist(card), 700)
+    saveTimer.current = setTimeout(() => {
+      dirtyRef.current = false
+      persist(card)
+    }, 700)
     return () => clearTimeout(saveTimer.current)
   }, [card, persist])
+
+  // Flush a pending debounced save when leaving the editor (back button,
+  // pane switch unmount) — otherwise edits made <700ms before leaving are lost.
+  useEffect(() => {
+    return () => {
+      if (dirtyRef.current && cardRef.current) {
+        dirtyRef.current = false
+        persist(cardRef.current)
+      }
+    }
+  }, [persist])
 
   const set = (field) => (e) => {
     const value = typeof e === 'string' ? e : e.target.value
     setCard((c) => ({ ...c, [field]: value }))
+  }
+
+  // Discrete changes (image upload/remove) save immediately — the debounce is
+  // only for typing, and a pending debounce is lost on quick reloads.
+  function applyAndSave(patch) {
+    const next = { ...cardRef.current, ...patch }
+    skipNextSave.current = true
+    dirtyRef.current = false
+    setCard(next)
+    persist(next)
   }
   const setTheme = (key, value) =>
     setCard((c) => ({ ...c, theme: { ...DEFAULT_THEME, ...c.theme, [key]: value } }))
@@ -170,7 +200,7 @@ export default function Editor() {
     setUploading(kind)
     try {
       const url = await uploadCardImage(user.id, card.id, kind, file, maxDim)
-      setCard((c) => ({ ...c, [`${kind}_url`]: url }))
+      applyAndSave({ [`${kind}_url`]: url })
     } catch (e) {
       toast.error(`Upload failed: ${e.message}`)
     } finally {
@@ -184,11 +214,11 @@ export default function Editor() {
     try {
       const blob = await removeLogoBackground(previousUrl)
       const url = await uploadCardImage(user.id, card.id, 'logo', blob)
-      setCard((c) => ({ ...c, logo_url: url }))
+      applyAndSave({ logo_url: url })
       toast.success('Background removed', {
         action: {
           label: 'Undo',
-          onClick: () => setCard((c) => ({ ...c, logo_url: previousUrl })),
+          onClick: () => applyAndSave({ logo_url: previousUrl }),
         },
       })
     } catch (e) {
@@ -383,7 +413,7 @@ export default function Editor() {
                           alt={label}
                           className="size-16 rounded-lg border object-cover"
                         />
-                        <Button type="button" variant="ghost" size="sm" onClick={() => set(`${kind}_url`)('')}>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => applyAndSave({ [`${kind}_url`]: null })}>
                           <Trash2 className="size-4" /> Remove
                         </Button>
                       </div>
