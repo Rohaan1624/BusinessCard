@@ -134,7 +134,11 @@
   justify-content: center;
   transition: background 0.15s, border-color 0.15s;
 }
-.contact-icon { color: var(--card-accent); font-size: 16px; }
+.contact-icon {
+  color: var(--card-accent);
+  display: inline-flex;
+  flex-shrink: 0;
+}
 .contact-label { overflow-wrap: anywhere; }
 
 /* filled (default): soft accent-tinted pills */

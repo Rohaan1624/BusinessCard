@@ -1,11 +1,14 @@
+import { Globe, Mail, Phone } from 'lucide-react'
 import { FONTS, DEFAULT_THEME, resolveCardText, logoSizePx } from '../lib/themes'
 import './card-preview.css'
 
-function ContactRow({ icon, label, href }) {
+function ContactRow({ icon: Icon, label, href }) {
   if (!label) return null
   const inner = (
     <>
-      <span className="contact-icon" aria-hidden="true">{icon}</span>
+      <span className="contact-icon" aria-hidden="true">
+        <Icon size={16} strokeWidth={2.25} />
+      </span>
       <span className="contact-label">{label}</span>
     </>
   )
@@ -90,9 +93,9 @@ export default function CardPreview({ card, footer = null }) {
 
       {(card.phone || card.email || card.website) && (
         <div className="card-contacts">
-          <ContactRow icon="✆" label={card.phone} href={card.phone ? `tel:${card.phone}` : null} />
-          <ContactRow icon="✉" label={card.email} href={card.email ? `mailto:${card.email}` : null} />
-          <ContactRow icon="↗" label={card.website?.replace(/^https?:\/\//, '')} href={website} />
+          <ContactRow icon={Phone} label={card.phone} href={card.phone ? `tel:${card.phone}` : null} />
+          <ContactRow icon={Mail} label={card.email} href={card.email ? `mailto:${card.email}` : null} />
+          <ContactRow icon={Globe} label={card.website?.replace(/^https?:\/\//, '')} href={website} />
         </div>
       )}
 
