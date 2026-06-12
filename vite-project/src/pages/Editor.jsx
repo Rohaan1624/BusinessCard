@@ -359,8 +359,8 @@ export default function Editor() {
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-6xl items-start gap-8 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_420px]">
-        <section className={`space-y-5 ${pane === 'edit' ? 'block' : 'hidden'} lg:block`}>
+      <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+        <section className={`min-w-0 space-y-5 ${pane === 'edit' ? 'block' : 'hidden'} lg:block`}>
           <Card>
             <CardHeader>
               <CardTitle>
@@ -749,7 +749,7 @@ export default function Editor() {
         </section>
 
         <aside
-          className={`space-y-5 lg:sticky lg:top-20 ${pane === 'preview' ? 'block' : 'hidden'} lg:block`}
+          className={`min-w-0 space-y-5 lg:sticky lg:top-20 ${pane === 'preview' ? 'block' : 'hidden'} lg:block`}
         >
           <div className="flex flex-col items-center gap-3">
             <div className="flex rounded-lg bg-muted p-1">
