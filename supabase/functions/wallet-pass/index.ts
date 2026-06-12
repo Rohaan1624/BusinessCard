@@ -40,7 +40,7 @@ function nearestPreset(hex?: string): string {
 }
 
 // deno-lint-ignore no-explicit-any
-function passPayload(card: any, publicUrl: string) {
+function passPayload(card: any, publicUrl: string, withBranding: boolean) {
   const backFields = []
   if (card.phone) backFields.push({ label: 'Phone', value: card.phone })
   if (card.email) backFields.push({ label: 'Email', value: card.email })
@@ -52,7 +52,8 @@ function passPayload(card: any, publicUrl: string) {
   if (card.job_title) secondaryFields.push({ label: 'TITLE', value: card.job_title })
   if (card.company) secondaryFields.push({ label: 'COMPANY', value: card.company })
 
-  return {
+  // deno-lint-ignore no-explicit-any
+  const payload: Record<string, any> = {
     barcodeValue: publicUrl,
     barcodeFormat: 'QR',
     organizationName: card.company || card.full_name || 'BizCard',
@@ -60,8 +61,22 @@ function passPayload(card: any, publicUrl: string) {
     primaryFields: [{ label: 'BUSINESS CARD', value: card.full_name || card.company || card.slug }],
     secondaryFields,
     backFields,
-    colorPreset: nearestPreset(card.theme?.accent),
+    colorPreset: nearestPreset(card.theme?.bg),
   }
+
+  // Per-card branding: the card's background color and its own logo.
+  // Sent on the first attempt; the caller retries without them if the
+  // WalletWallet plan ever stops accepting these fields.
+  if (withBranding) {
+    const bg = card.theme?.bg
+    if (typeof bg === 'string' && /^#[0-9a-fA-F]{6}$/.test(bg)) {
+      payload.color = bg
+    }
+    if (typeof card.logo_url === 'string' && card.logo_url.startsWith('https://')) {
+      payload.logoURL = card.logo_url
+    }
+  }
+  return payload
 }
 
 Deno.serve(async (req) => {
@@ -93,11 +108,18 @@ Deno.serve(async (req) => {
     const url = card.wallet_serial
       ? `${WALLETWALLET_API}/${card.wallet_serial}`
       : WALLETWALLET_API
-    const res = await fetch(url, {
-      method: card.wallet_serial ? 'PUT' : 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(passPayload(card, publicUrl)),
-    })
+    const send = (withBranding: boolean) =>
+      fetch(url, {
+        method: card.wallet_serial ? 'PUT' : 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(passPayload(card, publicUrl, withBranding)),
+      })
+
+    let res = await send(true)
+    if (!res.ok) {
+      console.error('WalletWallet branded request failed, retrying plain', res.status, await res.text())
+      res = await send(false)
+    }
     const pass = await res.json()
     if (!res.ok) {
       console.error('WalletWallet request failed', res.status, pass)
