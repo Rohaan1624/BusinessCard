@@ -1,4 +1,4 @@
-# CardForge — Digital Business Cards
+# BizCard — Digital Business Cards
 
 Create a digital business card (theme, logo, photo, contact info — all optional), then pay
 **$5 one-time via PayPal** to publish it. Publishing unlocks:

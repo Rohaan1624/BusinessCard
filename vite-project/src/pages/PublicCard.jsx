@@ -15,7 +15,7 @@ export default function PublicCard() {
   useEffect(() => {
     supabase
       .from('cards')
-      .select('full_name, job_title, company, phone, email, website, bio, socials, theme, logo_url, photo_url, slug')
+      .select('full_name, job_title, company, phone, email, website, bio, socials, theme, logo_url, photo_url, bg_image_url, slug')
       .eq('slug', slug)
       .eq('status', 'paid')
       .maybeSingle()
@@ -85,7 +85,7 @@ export default function PublicCard() {
 
       <footer className="hidden pb-4 text-center text-xs text-muted-foreground sm:block">
         <Link to="/" className="hover:text-foreground">
-          Made with CardForge — create yours for $5
+          Made with BizCard — create yours for $5
         </Link>
       </footer>
     </div>

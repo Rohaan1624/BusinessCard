@@ -12,8 +12,8 @@ async function downscale(file, maxDim = 1024) {
   return blob || file
 }
 
-export async function uploadCardImage(userId, cardId, kind, file) {
-  const blob = await downscale(file)
+export async function uploadCardImage(userId, cardId, kind, file, maxDim = 1024) {
+  const blob = await downscale(file, maxDim)
   const path = `${userId}/${cardId}/${kind}-${Date.now()}.webp`
   const { error } = await supabase.storage
     .from('card-assets')

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Eye, PencilLine, Trash2, Wallet } from 'lucide-react'
+import { Eye, PencilLine, Trash2, Wallet, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/auth-context'
 import { uploadCardImage } from '../lib/uploadImage'
+import { removeLogoBackground } from '../lib/removeBackground'
 import { downloadWalletPass } from '../lib/walletPass'
-import { ACCENT_SWATCHES, BG_SWATCHES, DEFAULT_THEME, LAYOUTS } from '../lib/themes'
+import { ACCENT_SWATCHES, BG_SWATCHES, DEFAULT_THEME, LAYOUTS, logoSizePx } from '../lib/themes'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,6 +19,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Slider } from '@/components/ui/slider'
+import { Switch } from '@/components/ui/switch'
 import AppHeader from '../components/AppHeader'
 import CardPreview from '../components/CardPreview'
 import QRCodeBlock from '../components/QRCodeBlock'
@@ -26,7 +29,13 @@ import CouponRedeem from '../components/CouponRedeem'
 
 const EDITABLE_FIELDS = [
   'full_name', 'job_title', 'company', 'phone', 'email', 'website',
-  'bio', 'socials', 'theme', 'logo_url', 'photo_url', 'slug',
+  'bio', 'socials', 'theme', 'logo_url', 'photo_url', 'bg_image_url', 'slug',
+]
+
+const IMAGE_KINDS = [
+  { kind: 'logo', label: 'Logo' },
+  { kind: 'photo', label: 'Your photo' },
+  { kind: 'bg_image', label: 'Background', maxDim: 1600 },
 ]
 
 function publicUrlFor(slug) {
@@ -40,6 +49,50 @@ function Field({ id, label, hint, children }) {
         {label} {hint && <span className="font-normal text-muted-foreground">{hint}</span>}
       </Label>
       {children}
+    </div>
+  )
+}
+
+function SelectField({ id, label, value, onChange, options }) {
+  return (
+    <Field id={id} label={label}>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger id={id} className="w-full"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {options.map(([v, l]) => (
+            <SelectItem key={v} value={v}>{l}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </Field>
+  )
+}
+
+function SwatchRow({ label, value, swatches, onChange }) {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <span className="w-24 text-sm font-medium">{label}</span>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {swatches.map((c) => (
+          <button
+            key={c}
+            type="button"
+            className={`size-7 rounded-full border-2 border-white shadow ring-1 ring-border transition ${
+              value === c ? 'ring-2 ring-primary' : ''
+            }`}
+            style={{ background: c }}
+            onClick={() => onChange(c)}
+            aria-label={`${label} ${c}`}
+          />
+        ))}
+        <input
+          type="color"
+          value={value || '#ffffff'}
+          onChange={(e) => onChange(e.target.value)}
+          aria-label={`Custom ${label.toLowerCase()} color`}
+          className="size-8 cursor-pointer rounded-md border bg-background p-0.5"
+        />
+      </div>
     </div>
   )
 }
@@ -112,14 +165,34 @@ export default function Editor() {
   const setTheme = (key, value) =>
     setCard((c) => ({ ...c, theme: { ...DEFAULT_THEME, ...c.theme, [key]: value } }))
 
-  async function handleUpload(kind, file) {
+  async function handleUpload(kind, file, maxDim) {
     if (!file) return
     setUploading(kind)
     try {
-      const url = await uploadCardImage(user.id, card.id, kind, file)
+      const url = await uploadCardImage(user.id, card.id, kind, file, maxDim)
       setCard((c) => ({ ...c, [`${kind}_url`]: url }))
     } catch (e) {
       toast.error(`Upload failed: ${e.message}`)
+    } finally {
+      setUploading(null)
+    }
+  }
+
+  async function removeLogoBg() {
+    const previousUrl = card.logo_url
+    setUploading('logo-bg')
+    try {
+      const blob = await removeLogoBackground(previousUrl)
+      const url = await uploadCardImage(user.id, card.id, 'logo', blob)
+      setCard((c) => ({ ...c, logo_url: url }))
+      toast.success('Background removed', {
+        action: {
+          label: 'Undo',
+          onClick: () => setCard((c) => ({ ...c, logo_url: previousUrl })),
+        },
+      })
+    } catch (e) {
+      toast.error(e.message)
     } finally {
       setUploading(null)
     }
@@ -298,20 +371,34 @@ export default function Editor() {
 
           <Card>
             <CardHeader><CardTitle>Images</CardTitle></CardHeader>
-            <CardContent className="grid gap-6 sm:grid-cols-2">
-              {['logo', 'photo'].map((kind) => (
+            <CardContent className="grid gap-6 sm:grid-cols-3">
+              {IMAGE_KINDS.map(({ kind, label, maxDim }) => (
                 <div className="space-y-2" key={kind}>
-                  <Label>{kind === 'logo' ? 'Logo' : 'Your photo'}</Label>
+                  <Label>{label}</Label>
                   {card[`${kind}_url`] ? (
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={card[`${kind}_url`]}
-                        alt={kind}
-                        className="size-16 rounded-lg border object-cover"
-                      />
-                      <Button type="button" variant="ghost" size="sm" onClick={() => set(`${kind}_url`)('')}>
-                        <Trash2 className="size-4" /> Remove
-                      </Button>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={card[`${kind}_url`]}
+                          alt={label}
+                          className="size-16 rounded-lg border object-cover"
+                        />
+                        <Button type="button" variant="ghost" size="sm" onClick={() => set(`${kind}_url`)('')}>
+                          <Trash2 className="size-4" /> Remove
+                        </Button>
+                      </div>
+                      {kind === 'logo' && (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={removeLogoBg}
+                          disabled={uploading !== null}
+                        >
+                          <Wand2 className="size-4" />
+                          {uploading === 'logo-bg' ? 'Working…' : 'Remove background'}
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <Button asChild type="button" variant="outline" disabled={uploading !== null}>
@@ -322,7 +409,7 @@ export default function Editor() {
                           accept="image/*"
                           hidden
                           disabled={uploading !== null}
-                          onChange={(e) => handleUpload(kind, e.target.files?.[0])}
+                          onChange={(e) => handleUpload(kind, e.target.files?.[0], maxDim)}
                         />
                       </label>
                     </Button>
@@ -333,37 +420,124 @@ export default function Editor() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>Theme</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              {[
-                { key: 'accent', label: 'Accent', swatches: ACCENT_SWATCHES },
-                { key: 'bg', label: 'Background', swatches: BG_SWATCHES },
-              ].map(({ key, label, swatches }) => (
-                <div key={key} className="flex flex-wrap items-center gap-3">
-                  <span className="w-24 text-sm font-medium">{label}</span>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {swatches.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        className={`size-7 rounded-full border-2 border-white shadow ring-1 ring-border transition ${
-                          theme[key] === c ? 'ring-2 ring-primary' : ''
-                        }`}
-                        style={{ background: c }}
-                        onClick={() => setTheme(key, c)}
-                        aria-label={`${label} ${c}`}
-                      />
-                    ))}
-                    <input
-                      type="color"
-                      value={theme[key]}
-                      onChange={(e) => setTheme(key, e.target.value)}
-                      aria-label={`Custom ${label.toLowerCase()} color`}
-                      className="size-8 cursor-pointer rounded-md border bg-background p-0.5"
+            <CardHeader><CardTitle>Design</CardTitle></CardHeader>
+            <CardContent className="space-y-5">
+              <SwatchRow
+                label="Accent"
+                value={theme.accent}
+                swatches={ACCENT_SWATCHES}
+                onChange={(v) => setTheme('accent', v)}
+              />
+              <SwatchRow
+                label="Background"
+                value={theme.bg}
+                swatches={BG_SWATCHES}
+                onChange={(v) => setTheme('bg', v)}
+              />
+
+              <div className="flex items-center gap-3">
+                <span className="w-24 text-sm font-medium">Gradient</span>
+                <Switch
+                  checked={!!theme.bg2}
+                  onCheckedChange={(on) => setTheme('bg2', on ? theme.bg : null)}
+                  aria-label="Gradient background"
+                />
+              </div>
+              {theme.bg2 && (
+                <SwatchRow
+                  label="Fade to"
+                  value={theme.bg2}
+                  swatches={BG_SWATCHES}
+                  onChange={(v) => setTheme('bg2', v)}
+                />
+              )}
+
+              {theme.layout === 'banner' && (
+                <>
+                  <SwatchRow
+                    label="Top bar"
+                    value={theme.bannerColor || theme.accent}
+                    swatches={ACCENT_SWATCHES}
+                    onChange={(v) => setTheme('bannerColor', v)}
+                  />
+                  <div className="flex items-center gap-3">
+                    <span className="w-24 text-sm font-medium">Bar gradient</span>
+                    <Switch
+                      checked={theme.bannerGradient !== false}
+                      onCheckedChange={(on) => setTheme('bannerGradient', on)}
+                      aria-label="Top bar gradient"
                     />
                   </div>
+                </>
+              )}
+
+              {card.bg_image_url && (
+                <div className="flex items-center gap-3">
+                  <span className="w-24 shrink-0 text-sm font-medium">Image dim</span>
+                  <Slider
+                    value={[theme.bgOverlay ?? 25]}
+                    min={0}
+                    max={80}
+                    step={5}
+                    onValueChange={([v]) => setTheme('bgOverlay', v)}
+                    aria-label="Background image dim"
+                    className="max-w-56"
+                  />
+                  <span className="w-10 text-right text-xs tabular-nums text-muted-foreground">
+                    {theme.bgOverlay ?? 25}%
+                  </span>
                 </div>
-              ))}
+              )}
+
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="w-24 text-sm font-medium">Text color</span>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={theme.text === 'auto' ? 'default' : 'outline'}
+                    onClick={() => setTheme('text', 'auto')}
+                  >
+                    Auto
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={theme.text !== 'auto' ? 'default' : 'outline'}
+                    onClick={() => setTheme('text', theme.text === 'auto' ? '#111827' : theme.text)}
+                  >
+                    Custom
+                  </Button>
+                  {theme.text !== 'auto' && (
+                    <input
+                      type="color"
+                      value={theme.text}
+                      onChange={(e) => setTheme('text', e.target.value)}
+                      aria-label="Custom text color"
+                      className="size-8 cursor-pointer rounded-md border bg-background p-0.5"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="w-24 shrink-0 text-sm font-medium">Corners</span>
+                <Slider
+                  value={[theme.radius ?? 20]}
+                  min={0}
+                  max={32}
+                  step={1}
+                  onValueChange={([v]) => setTheme('radius', v)}
+                  aria-label="Corner radius"
+                  className="max-w-56"
+                />
+                <span className="w-10 text-right text-xs tabular-nums text-muted-foreground">
+                  {theme.radius ?? 20}px
+                </span>
+              </div>
+
+              <Separator />
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field id="font" label="Font">
                   <Select value={theme.font} onValueChange={(v) => setTheme('font', v)}>
@@ -385,7 +559,45 @@ export default function Editor() {
                     </SelectContent>
                   </Select>
                 </Field>
+                <SelectField
+                  id="shadow" label="Shadow"
+                  value={theme.shadow} onChange={(v) => setTheme('shadow', v)}
+                  options={[['none', 'None'], ['soft', 'Soft'], ['bold', 'Bold']]}
+                />
+                <SelectField
+                  id="contactStyle" label="Contact style"
+                  value={theme.contactStyle} onChange={(v) => setTheme('contactStyle', v)}
+                  options={[['filled', 'Filled pills'], ['outline', 'Outlined'], ['text', 'Text links']]}
+                />
+                <SelectField
+                  id="photoShape" label="Photo shape"
+                  value={theme.photoShape} onChange={(v) => setTheme('photoShape', v)}
+                  options={[['circle', 'Circle'], ['rounded', 'Rounded'], ['square', 'Square']]}
+                />
+                <SelectField
+                  id="photoSize" label="Photo size"
+                  value={theme.photoSize} onChange={(v) => setTheme('photoSize', v)}
+                  options={[['sm', 'Small'], ['md', 'Medium'], ['lg', 'Large']]}
+                />
               </div>
+
+              {card.logo_url && (
+                <div className="flex items-center gap-3">
+                  <span className="w-24 shrink-0 text-sm font-medium">Logo size</span>
+                  <Slider
+                    value={[logoSizePx(theme.logoSize)]}
+                    min={32}
+                    max={180}
+                    step={2}
+                    onValueChange={([v]) => setTheme('logoSize', v)}
+                    aria-label="Logo size"
+                    className="max-w-56"
+                  />
+                  <span className="w-10 text-right text-xs tabular-nums text-muted-foreground">
+                    {logoSizePx(theme.logoSize)}px
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
 

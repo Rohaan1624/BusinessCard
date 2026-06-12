@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
         purchase_units: [
           {
             reference_id: card.id,
-            description: `CardForge digital business card (${card.slug})`,
+            description: `BizCard digital business card (${card.slug})`,
             amount: CARD_PRICE,
           },
         ],

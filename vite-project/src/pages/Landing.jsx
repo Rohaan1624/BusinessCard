@@ -6,6 +6,18 @@ import { Badge } from '@/components/ui/badge'
 import AppHeader from '../components/AppHeader'
 import CardPreview from '../components/CardPreview'
 
+// Inline SVG avatar — no external request, never broken.
+const demoAvatar = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#67e8f9"/><stop offset="1" stop-color="#0e7490"/>
+    </linearGradient></defs>
+    <rect width="240" height="240" fill="url(#g)"/>
+    <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
+      font-family="system-ui,sans-serif" font-size="92" font-weight="700" fill="#ffffff">AR</text>
+  </svg>`
+)}`
+
 const demoCard = {
   full_name: 'Alex Rivera',
   job_title: 'Product Designer',
@@ -13,8 +25,21 @@ const demoCard = {
   phone: '+1 (555) 010-2345',
   email: 'alex@northwind.studio',
   website: 'northwind.studio',
-  socials: [{ label: 'LinkedIn', url: 'https://linkedin.com/in/alexrivera' }],
-  theme: { accent: '#0e7490', bg: '#ffffff', font: 'sans', layout: 'banner' },
+  photo_url: demoAvatar,
+  socials: [
+    { label: 'LinkedIn', url: 'https://linkedin.com/in/alexrivera' },
+    { label: 'Dribbble', url: 'https://dribbble.com/alexrivera' },
+  ],
+  theme: {
+    accent: '#22d3ee',
+    bg: '#0f172a',
+    bg2: '#1e1b4b',
+    font: 'sans',
+    layout: 'banner',
+    contactStyle: 'outline',
+    shadow: 'bold',
+    radius: 24,
+  },
 }
 
 const features = [
@@ -59,8 +84,16 @@ export default function Landing() {
               <span className="text-sm text-muted-foreground">Pay $5 only when you publish</span>
             </div>
           </div>
-          <div className="flex justify-center">
-            <CardPreview card={demoCard} />
+          <div className="flex justify-center py-6">
+            <div className="relative">
+              <div
+                aria-hidden="true"
+                className="absolute -inset-8 -z-10 rounded-full bg-gradient-to-tr from-primary/30 via-cyan-400/20 to-fuchsia-400/30 blur-3xl"
+              />
+              <div className="-rotate-2 transition-transform duration-300 hover:rotate-0">
+                <CardPreview card={demoCard} />
+              </div>
+            </div>
           </div>
         </section>
 

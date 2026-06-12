@@ -5,7 +5,7 @@
 import { errorResponse, json, preflight } from '../_shared/http.ts'
 import { adminClient, getUser } from '../_shared/supabase.ts'
 
-const WALLETWALLET_API = 'https://www.walletwallet.dev/api/passes'
+const WALLETWALLET_API = 'https://api.walletwallet.dev/api/passes'
 
 // WalletWallet's free tier offers fixed color presets; pick the closest to the
 // card's accent color. (Custom hex is a Pro feature — swap `colorPreset` for
@@ -55,7 +55,7 @@ function passPayload(card: any, publicUrl: string) {
   return {
     barcodeValue: publicUrl,
     barcodeFormat: 'QR',
-    organizationName: card.company || card.full_name || 'CardForge',
+    organizationName: card.company || card.full_name || 'BizCard',
     logoText: card.full_name || card.company || 'Business Card',
     primaryFields: [{ label: 'BUSINESS CARD', value: card.full_name || card.company || card.slug }],
     secondaryFields,
@@ -112,6 +112,7 @@ Deno.serve(async (req) => {
       applePass: pass.applePass,
       serialNumber: pass.serialNumber,
       shareUrl: pass.shareUrl,
+      googleSaveUrl: pass.googleSaveUrl,
     })
   } catch (e) {
     console.error(e)

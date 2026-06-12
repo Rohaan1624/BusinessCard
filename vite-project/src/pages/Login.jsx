@@ -49,7 +49,7 @@ export default function Login() {
         <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <CreditCard className="size-4" />
         </span>
-        CardForge
+        BizCard
       </Link>
 
       <Card className="w-full max-w-sm">
