@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#0f766e"/>
+      <stop offset="1" stop-color="#115e59"/>
+    </linearGradient>
+    <radialGradient id="soft" cx="0.2" cy="0.15" r="0.8">
+      <stop offset="0" stop-color="#5eead4" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#5eead4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="760" height="980" fill="url(#base)"/>
+  <rect width="760" height="980" fill="url(#soft)"/>
+  <!-- pulse line -->
+  <path d="M-20 500h180l40-90 60 180 50-120 30 30h160l40-60 50 60h190"
+    stroke="#ccfbf1" stroke-opacity="0.22" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- soft plus signs -->
+  <g stroke="#ccfbf1" stroke-opacity="0.12" stroke-width="5" stroke-linecap="round">
+    <path d="M640 160v44m-22-22h44"/>
+    <path d="M120 800v36m-18-18h36"/>
+    <path d="M660 840v28m-14-14h28"/>
+    <path d="M100 180v28m-14-14h28"/>
+  </g>
+  <!-- heart outline -->
+  <path d="M380 800c-10-26-46-30-46-2 0 20 30 36 46 50 16-14 46-30 46-50 0-28-36-24-46 2z"
+    stroke="#ccfbf1" stroke-opacity="0.16" stroke-width="3.5" fill="none"/>
+</svg>

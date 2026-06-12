@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#fdf6ec"/>
+      <stop offset="1" stop-color="#f6e7d2"/>
+    </linearGradient>
+    <radialGradient id="warm" cx="0.5" cy="0" r="0.9">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="760" height="980" fill="url(#base)"/>
+  <rect width="760" height="980" fill="url(#warm)"/>
+
+  <!-- hanging pendant lamps -->
+  <g stroke="#c2410c" stroke-opacity="0.25" fill="none" stroke-width="3" stroke-linecap="round">
+    <path d="M150 0v70"/>
+    <path d="M120 70h60l-12 36h-36z"/>
+    <path d="M610 0v100"/>
+    <path d="M580 100h60l-12 36h-36z"/>
+  </g>
+  <circle cx="150" cy="118" r="5" fill="#f59e0b" fill-opacity="0.4"/>
+  <circle cx="610" cy="148" r="5" fill="#f59e0b" fill-opacity="0.4"/>
+
+  <!-- diner table with food, top-right -->
+  <g stroke="#9a5b33" stroke-opacity="0.3" fill="none" stroke-width="3" stroke-linecap="round">
+    <ellipse cx="600" cy="330" rx="120" ry="26"/>
+    <path d="M520 352v60M680 352v60"/>
+    <!-- plate with steam -->
+    <ellipse cx="560" cy="322" rx="34" ry="9"/>
+    <path d="M548 300c6-8-6-12 0-20M566 300c6-8-6-12 0-20"/>
+    <!-- glass -->
+    <path d="M650 296v22m-8-32h16l-3 32h-10z"/>
+  </g>
+
+  <!-- café table & chairs, left -->
+  <g stroke="#9a5b33" stroke-opacity="0.28" fill="none" stroke-width="3" stroke-linecap="round">
+    <ellipse cx="170" cy="640" rx="80" ry="18"/>
+    <path d="M170 656v90m-34-6h68"/>
+    <!-- chairs -->
+    <path d="M60 626v-60m0 24h36m-36 36v60"/>
+    <path d="M286 626v-60m0 24h-36m36 36v60"/>
+    <!-- coffee cup on table -->
+    <path d="M150 616c0 8 8 14 18 14s18-6 18-14v-10h-36zM188 608c10 0 10 12 0 12"/>
+  </g>
+
+  <!-- cloche, bottom-right -->
+  <g stroke="#9a5b33" stroke-opacity="0.26" fill="none" stroke-width="3" stroke-linecap="round">
+    <path d="M560 880a70 70 0 0 1 140 0z"/>
+    <path d="M540 880h180"/>
+    <circle cx="630" cy="800" r="6"/>
+  </g>
+
+  <!-- cutlery, mid-left -->
+  <g stroke="#c2410c" stroke-opacity="0.22" fill="none" stroke-width="3" stroke-linecap="round">
+    <g transform="translate(80 300) rotate(-14)">
+      <path d="M0 0v18M10 0v18M20 0v18M10 18v50"/>
+      <path d="M0 0v10a10 10 0 0 0 20 0V0"/>
+    </g>
+    <g transform="translate(120 296) rotate(-14)">
+      <path d="M0 0c11 7 11 28 0 35v38"/>
+    </g>
+  </g>
+
+  <!-- scattered dots -->
+  <g fill="#c2410c" fill-opacity="0.12">
+    <circle cx="700" cy="60" r="4"/>
+    <circle cx="60" cy="120" r="4"/>
+    <circle cx="380" cy="900" r="5"/>
+    <circle cx="80" cy="900" r="4"/>
+  </g>
+</svg>

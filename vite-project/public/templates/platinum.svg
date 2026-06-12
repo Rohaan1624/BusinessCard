@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#33383f"/>
+      <stop offset="1" stop-color="#1b1f24"/>
+    </linearGradient>
+    <linearGradient id="brush" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="760" height="980" fill="url(#base)"/>
+  <!-- brushed metal lines -->
+  <g fill="url(#brush)">
+    <rect y="140" width="760" height="2"/>
+    <rect y="220" width="760" height="1.5"/>
+    <rect y="300" width="760" height="2.5"/>
+    <rect y="430" width="760" height="1.5"/>
+    <rect y="560" width="760" height="2"/>
+    <rect y="700" width="760" height="1.5"/>
+    <rect y="800" width="760" height="2.5"/>
+    <rect y="900" width="760" height="1.5"/>
+  </g>
+  <!-- silver arcs -->
+  <g stroke="#cbd5e1" fill="none" stroke-linecap="round">
+    <path d="M760 80A380 380 0 0 0 460 -80" stroke-opacity="0.2" stroke-width="2.5"/>
+    <path d="M760 140A440 440 0 0 0 380 -120" stroke-opacity="0.1" stroke-width="2"/>
+    <path d="M0 900a380 380 0 0 0 300 160" stroke-opacity="0.18" stroke-width="2.5"/>
+  </g>
+  <g fill="#e2e8f0" fill-opacity="0.35">
+    <rect x="76" y="156" width="7" height="7" transform="rotate(45 79.5 159.5)"/>
+    <rect x="676" y="816" width="7" height="7" transform="rotate(45 679.5 819.5)"/>
+  </g>
+</svg>

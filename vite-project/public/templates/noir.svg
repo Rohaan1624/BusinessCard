@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#141210"/>
+      <stop offset="1" stop-color="#0a0908"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d4af37"/>
+      <stop offset="0.5" stop-color="#f3d27a"/>
+      <stop offset="1" stop-color="#b8860b"/>
+    </linearGradient>
+  </defs>
+  <rect width="760" height="980" fill="url(#base)"/>
+  <!-- inset gold frame -->
+  <rect x="34" y="34" width="692" height="912" rx="14" fill="none"
+    stroke="url(#gold)" stroke-opacity="0.5" stroke-width="2"/>
+  <rect x="46" y="46" width="668" height="888" rx="10" fill="none"
+    stroke="url(#gold)" stroke-opacity="0.22" stroke-width="1"/>
+  <!-- art deco corners -->
+  <g stroke="url(#gold)" stroke-opacity="0.6" stroke-width="2.5" fill="none" stroke-linecap="round">
+    <path d="M70 130v-60h60M100 130v-30h30"/>
+    <path d="M690 130v-60h-60M660 130v-30h-30"/>
+    <path d="M70 850v60h60M100 850v30h30"/>
+    <path d="M690 850v60h-60M660 850v30h-30"/>
+  </g>
+  <!-- deco fan, centered top -->
+  <g stroke="url(#gold)" stroke-opacity="0.3" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M380 150v-50M352 154l-18-46M408 154l18-46M330 168l-34-36M430 168l34-36"/>
+  </g>
+  <g fill="#d4af37">
+    <circle cx="380" cy="160" r="4" fill-opacity="0.55"/>
+    <circle cx="380" cy="876" r="3" fill-opacity="0.4"/>
+    <path d="M380 838l8 12-8 12-8-12z" fill-opacity="0.45"/>
+  </g>
+</svg>

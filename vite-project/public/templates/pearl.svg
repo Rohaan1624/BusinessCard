@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f4f4f8"/>
+    </linearGradient>
+    <radialGradient id="p1" cx="0.85" cy="0.12" r="0.6">
+      <stop offset="0" stop-color="#c7d2fe" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#c7d2fe" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="p2" cx="0.1" cy="0.9" r="0.6">
+      <stop offset="0" stop-color="#fbcfe8" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#fbcfe8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="p3" cx="0.2" cy="0.25" r="0.45">
+      <stop offset="0" stop-color="#a7f3d0" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#a7f3d0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="760" height="980" fill="url(#base)"/>
+  <rect width="760" height="980" fill="url(#p1)"/>
+  <rect width="760" height="980" fill="url(#p2)"/>
+  <rect width="760" height="980" fill="url(#p3)"/>
+  <!-- pearly rings -->
+  <g stroke="#c7d2fe" fill="none" stroke-width="1.5">
+    <circle cx="620" cy="180" r="90" stroke-opacity="0.5"/>
+    <circle cx="620" cy="180" r="60" stroke-opacity="0.35"/>
+  </g>
+  <g stroke="#f9a8d4" fill="none" stroke-width="1.5">
+    <circle cx="130" cy="800" r="80" stroke-opacity="0.4"/>
+    <circle cx="130" cy="800" r="52" stroke-opacity="0.3"/>
+  </g>
+  <g fill="#a5b4fc" fill-opacity="0.4">
+    <circle cx="80" cy="200" r="3"/>
+    <circle cx="690" cy="640" r="3"/>
+    <circle cx="420" cy="80" r="3"/>
+    <circle cx="540" cy="920" r="3"/>
+  </g>
+</svg>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#4a2545"/>
+      <stop offset="1" stop-color="#2a1128"/>
+    </linearGradient>
+  </defs>
+  <rect width="760" height="980" fill="url(#base)"/>
+  <!-- gold organic blobs -->
+  <g stroke="#d4af37" fill="none" stroke-width="3">
+    <path stroke-opacity="0.25" d="M560 120c80-30 160 40 130 110s-150 80-190 20 -20-100 60-130z"/>
+    <path stroke-opacity="0.16" d="M90 700c70-40 170 0 160 80s-130 110-190 50-40-90 30-130z"/>
+    <path stroke-opacity="0.1" d="M300 420c50-20 110 10 100 60s-90 70-130 30-20-70 30-90z"/>
+  </g>
+  <!-- shimmer dots -->
+  <g fill="#d4af37">
+    <circle cx="180" cy="180" r="4" fill-opacity="0.4"/>
+    <circle cx="660" cy="540" r="3" fill-opacity="0.35"/>
+    <circle cx="420" cy="880" r="4" fill-opacity="0.3"/>
+    <circle cx="80" cy="420" r="3" fill-opacity="0.3"/>
+    <circle cx="600" cy="820" r="3" fill-opacity="0.35"/>
+    <circle cx="340" cy="100" r="3" fill-opacity="0.3"/>
+  </g>
+  <!-- lipstick stroke -->
+  <path d="M620 700c-40 80-40 140-10 180" stroke="#e8b4cb" stroke-opacity="0.2" stroke-width="22" stroke-linecap="round" fill="none"/>
+</svg>

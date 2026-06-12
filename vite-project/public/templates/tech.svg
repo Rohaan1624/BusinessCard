@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#0d1426"/>
+      <stop offset="1" stop-color="#080d1a"/>
+    </linearGradient>
+  </defs>
+  <rect width="760" height="980" fill="url(#base)"/>
+  <!-- circuit traces -->
+  <g stroke="#22d3ee" stroke-opacity="0.14" fill="none" stroke-width="2.5" stroke-linecap="round">
+    <path d="M60 80h140l40 40v120l-30 30H120"/>
+    <path d="M700 240h-120l-50 50v90"/>
+    <path d="M80 880h180l40-40V720l50-50h120"/>
+    <path d="M680 900v-120l-60-60"/>
+    <path d="M380 60v100l40 40"/>
+  </g>
+  <g fill="#22d3ee" fill-opacity="0.3">
+    <circle cx="60" cy="80" r="5"/>
+    <circle cx="120" cy="270" r="5"/>
+    <circle cx="700" cy="240" r="5"/>
+    <circle cx="530" cy="380" r="5"/>
+    <circle cx="80" cy="880" r="5"/>
+    <circle cx="470" cy="670" r="5"/>
+    <circle cx="680" cy="900" r="5"/>
+    <circle cx="420" cy="200" r="5"/>
+  </g>
+  <!-- chip -->
+  <g transform="translate(560 560)" stroke="#22d3ee" stroke-opacity="0.12" fill="none" stroke-width="2.5">
+    <rect width="90" height="90" rx="10"/>
+    <rect x="22" y="22" width="46" height="46" rx="6"/>
+    <path d="M22 -14v14M45 -14v14M68 -14v14M22 90v14M45 90v14M68 90v14M-14 22h14M-14 45h14M-14 68h14M90 22h14M90 45h14M90 68h14"/>
+  </g>
+</svg>

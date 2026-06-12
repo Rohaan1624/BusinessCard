@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#10243e"/>
+      <stop offset="1" stop-color="#0a1626"/>
+    </linearGradient>
+  </defs>
+  <rect width="760" height="980" fill="url(#base)"/>
+  <!-- shipping routes -->
+  <g stroke="#38bdf8" stroke-opacity="0.16" fill="none" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round">
+    <path d="M-20 260C180 160 420 360 780 180"/>
+    <path d="M-20 700C240 560 520 820 780 640"/>
+  </g>
+  <g fill="#38bdf8" fill-opacity="0.25">
+    <circle cx="180" cy="212" r="6"/>
+    <circle cx="560" cy="262" r="6"/>
+    <circle cx="300" cy="624" r="6"/>
+    <circle cx="640" cy="704" r="6"/>
+  </g>
+  <!-- containers -->
+  <g stroke="#7dd3fc" stroke-opacity="0.1" fill="none" stroke-width="3">
+    <g transform="translate(70 820)">
+      <rect width="120" height="46" rx="4"/>
+      <path d="M24 0v46M48 0v46M72 0v46M96 0v46"/>
+    </g>
+    <g transform="translate(560 90)">
+      <rect width="120" height="46" rx="4"/>
+      <path d="M24 0v46M48 0v46M72 0v46M96 0v46"/>
+    </g>
+  </g>
+  <!-- chevrons -->
+  <g stroke="#38bdf8" stroke-opacity="0.1" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M80 460l28 24-28 24M124 460l28 24-28 24"/>
+    <path d="M600 880l28 24-28 24M644 880l28 24-28 24"/>
+  </g>
+</svg>

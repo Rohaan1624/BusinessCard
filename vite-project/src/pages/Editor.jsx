@@ -9,6 +9,7 @@ import { uploadCardImage } from '../lib/uploadImage'
 import { removeLogoBackground } from '../lib/removeBackground'
 import { downloadWalletPass } from '../lib/walletPass'
 import { ACCENT_SWATCHES, BG_SWATCHES, DEFAULT_THEME, LAYOUTS, logoSizePx } from '../lib/themes'
+import { TEMPLATES } from '../lib/templates'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -110,6 +111,7 @@ export default function Editor() {
   const [walletBusy, setWalletBusy] = useState(false)
   const [pane, setPane] = useState('edit') // mobile: 'edit' | 'preview'
   const [snapshotBusy, setSnapshotBusy] = useState(false)
+  const [showQR, setShowQR] = useState(false)
   const qrCardRef = useRef(null)
   const saveTimer = useRef(null)
   const skipNextSave = useRef(true)
@@ -211,6 +213,14 @@ export default function Editor() {
     } finally {
       setUploading(null)
     }
+  }
+
+  function applyTemplate(t) {
+    const previous = { theme: card.theme, bg_image_url: card.bg_image_url }
+    applyAndSave({ theme: { ...DEFAULT_THEME, ...t.theme }, bg_image_url: t.bg })
+    toast.success(`${t.label} template applied`, {
+      action: { label: 'Undo', onClick: () => applyAndSave(previous) },
+    })
   }
 
   async function removeLogoBg() {
@@ -480,6 +490,32 @@ export default function Editor() {
           <Card>
             <CardHeader><CardTitle>Design</CardTitle></CardHeader>
             <CardContent className="space-y-5">
+              <div className="space-y-2">
+                <span className="text-sm font-medium">Templates</span>
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {TEMPLATES.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => applyTemplate(t)}
+                      className="group w-24 shrink-0 text-center"
+                    >
+                      <img
+                        src={t.bg}
+                        alt={t.label}
+                        loading="lazy"
+                        className={`h-16 w-24 rounded-lg object-cover ring-1 ring-border transition group-hover:ring-primary/60 ${
+                          card.bg_image_url === t.bg ? 'ring-2 ring-primary' : ''
+                        }`}
+                      />
+                      <span className="mt-1 block truncate text-xs text-muted-foreground">
+                        {t.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <SwatchRow
                 label="Accent"
                 value={theme.accent}
@@ -693,20 +729,38 @@ export default function Editor() {
         <aside
           className={`space-y-5 lg:sticky lg:top-20 ${pane === 'preview' ? 'block' : 'hidden'} lg:block`}
         >
-          <div className="flex justify-center">
-            <CardPreview card={card} />
-          </div>
-
           <div className="flex flex-col items-center gap-3">
-            <span className="text-sm font-medium text-muted-foreground">With QR code</span>
-            <div ref={qrCardRef} className="flex justify-center">
-              <CardWithQR card={card} locked={!isPaid} />
-            </div>
-            {isPaid && (
-              <Button variant="outline" onClick={downloadCardPng} disabled={snapshotBusy}>
-                <Download className="size-4" />
-                {snapshotBusy ? 'Rendering…' : 'Download card PNG'}
+            <div className="flex rounded-lg bg-muted p-1">
+              <Button
+                size="sm"
+                variant={showQR ? 'ghost' : 'default'}
+                onClick={() => setShowQR(false)}
+              >
+                Card
               </Button>
+              <Button
+                size="sm"
+                variant={showQR ? 'default' : 'ghost'}
+                onClick={() => setShowQR(true)}
+              >
+                With QR code
+              </Button>
+            </div>
+
+            {showQR ? (
+              <>
+                <div ref={qrCardRef} className="flex justify-center">
+                  <CardWithQR card={card} locked={!isPaid} />
+                </div>
+                {isPaid && (
+                  <Button variant="outline" onClick={downloadCardPng} disabled={snapshotBusy}>
+                    <Download className="size-4" />
+                    {snapshotBusy ? 'Rendering…' : 'Download card PNG'}
+                  </Button>
+                )}
+              </>
+            ) : (
+              <CardPreview card={card} />
             )}
           </div>
 

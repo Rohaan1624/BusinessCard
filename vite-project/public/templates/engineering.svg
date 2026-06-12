@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#16324f"/>
+      <stop offset="1" stop-color="#0e2236"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0v48" fill="none" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="760" height="980" fill="url(#base)"/>
+  <rect width="760" height="980" fill="url(#grid)"/>
+  <!-- gear -->
+  <g transform="translate(620 180)" stroke="#7dd3fc" stroke-opacity="0.18" fill="none" stroke-width="3">
+    <circle r="64"/>
+    <circle r="26"/>
+    <g stroke-linecap="round">
+      <path d="M0 -64v-18M0 64v18M64 0h18M-64 0h-18M45 -45l13-13M-45 45l-13 13M45 45l13 13M-45 -45l-13 -13"/>
+    </g>
+  </g>
+  <!-- gear small -->
+  <g transform="translate(120 800)" stroke="#7dd3fc" stroke-opacity="0.12" fill="none" stroke-width="3">
+    <circle r="40"/>
+    <circle r="16"/>
+    <g stroke-linecap="round">
+      <path d="M0 -40v-12M0 40v12M40 0h12M-40 0h-12M28 -28l9-9M-28 28l-9 9M28 28l9 9M-28 -28l-9 -9"/>
+    </g>
+  </g>
+  <!-- crosshair + dims -->
+  <g stroke="#ffffff" stroke-opacity="0.1" fill="none" stroke-width="2">
+    <circle cx="200" cy="320" r="40"/>
+    <path d="M200 260v120M140 320h120"/>
+    <path d="M460 700h180m-180-8v16m180-16v16"/>
+  </g>
+</svg>

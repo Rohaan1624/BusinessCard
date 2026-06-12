@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#fdfdfc"/>
+      <stop offset="1" stop-color="#f3f1ed"/>
+    </linearGradient>
+  </defs>
+  <rect width="760" height="980" fill="url(#base)"/>
+  <!-- marble veins -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M-20 120C140 180 200 60 340 140s180 200 300 160 160-80 160-80"
+      stroke="#d6d3d1" stroke-opacity="0.7" stroke-width="2"/>
+    <path d="M-20 150C150 200 230 90 360 165" stroke="#e7e5e4" stroke-opacity="0.9" stroke-width="5"/>
+    <path d="M120 980C180 800 60 700 160 560s260-90 240-240S320 80 360 -20"
+      stroke="#d6d3d1" stroke-opacity="0.55" stroke-width="2.5"/>
+    <path d="M760 720C620 760 560 660 480 720s-120 180-220 160"
+      stroke="#d6d3d1" stroke-opacity="0.6" stroke-width="2"/>
+    <path d="M760 760C640 800 560 700 470 760" stroke="#e7e5e4" stroke-opacity="0.9" stroke-width="6"/>
+    <path d="M620 -20c-40 120 60 180 20 300s-160 140-140 260"
+      stroke="#a8a29e" stroke-opacity="0.3" stroke-width="1.5"/>
+    <path d="M40 420c80 40 60 140 140 160" stroke="#a8a29e" stroke-opacity="0.25" stroke-width="1.5"/>
+  </g>
+  <!-- gold flecks -->
+  <g fill="#b45309">
+    <circle cx="540" cy="200" r="2.5" fill-opacity="0.4"/>
+    <circle cx="180" cy="320" r="2" fill-opacity="0.35"/>
+    <circle cx="640" cy="560" r="2.5" fill-opacity="0.35"/>
+    <circle cx="120" cy="760" r="2" fill-opacity="0.3"/>
+    <circle cx="420" cy="880" r="2.5" fill-opacity="0.35"/>
+  </g>
+  <path d="M500 188c30-16 70-10 90 12" stroke="#b45309" stroke-opacity="0.18" stroke-width="1.5" fill="none"/>
+</svg>

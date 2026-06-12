@@ -79,7 +79,7 @@ export default function Landing() {
             </p>
             <div className="flex flex-col items-center gap-3 sm:flex-row lg:justify-start sm:justify-center">
               <Button asChild size="lg" className="max-sm:w-full">
-                <Link to={cta}>Create your card — it's free to design</Link>
+                <Link to={cta}>Create your card, it's free to design</Link>
               </Button>
               <span className="text-sm text-muted-foreground">Pay $5 only when you publish</span>
             </div>

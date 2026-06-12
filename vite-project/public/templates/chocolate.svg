@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#442612"/>
+      <stop offset="1" stop-color="#23120a"/>
+    </linearGradient>
+    <linearGradient id="drip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7c4a21" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#7c4a21" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="760" height="980" fill="url(#base)"/>
+  <!-- melting drips from the top -->
+  <path fill="url(#drip)" d="M0 0h760v40c-30 0-38 66-66 66s-26-48-58-48-30 96-64 96-30-70-62-70-32 38-64 38-28-78-62-78-34 54-68 54-26-34-58-34-32 64-66 64-28-88-62-88-22 24-50 24-24-24-40-24z"/>
+  <g fill="#a16236" fill-opacity="0.1">
+    <circle cx="120" cy="420" r="9"/>
+    <circle cx="560" cy="360" r="7"/>
+    <circle cx="660" cy="640" r="10"/>
+    <circle cx="220" cy="760" r="7"/>
+    <circle cx="430" cy="560" r="6"/>
+    <circle cx="90" cy="880" r="8"/>
+  </g>
+  <!-- chocolate bar squares -->
+  <g stroke="#a16236" stroke-opacity="0.12" fill="none" stroke-width="3">
+    <g transform="translate(580 800) rotate(-12)">
+      <rect width="56" height="56" rx="8"/>
+      <rect x="64" width="56" height="56" rx="8"/>
+      <rect y="64" width="56" height="56" rx="8"/>
+    </g>
+    <path d="M120 220c40 28 80-28 120 0" stroke-linecap="round"/>
+  </g>
+</svg>

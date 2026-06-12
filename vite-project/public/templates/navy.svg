@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#0d2240"/>
+      <stop offset="1" stop-color="#071325"/>
+    </linearGradient>
+    <radialGradient id="lift" cx="0.5" cy="0.08" r="0.7">
+      <stop offset="0" stop-color="#3b6ea5" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#3b6ea5" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="760" height="980" fill="url(#base)"/>
+  <rect width="760" height="980" fill="url(#lift)"/>
+  <!-- thin gold inner frame -->
+  <rect x="40" y="40" width="680" height="900" rx="12" fill="none"
+    stroke="#d4af37" stroke-opacity="0.4" stroke-width="1.5"/>
+  <!-- corner flourishes -->
+  <g stroke="#d4af37" stroke-opacity="0.45" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M64 110c0-26 20-46 46-46M696 110c0-26-20-46-46-46M64 870c0 26 20 46 46 46M696 870c0 26-20 46-46 46"/>
+  </g>
+  <!-- subtle crest diamond -->
+  <g stroke="#d4af37" stroke-opacity="0.3" stroke-width="2" fill="none">
+    <path d="M380 96l26 34-26 34-26-34z"/>
+    <path d="M380 110l16 20-16 20-16-20z" stroke-opacity="0.18"/>
+  </g>
+  <g fill="#d4af37">
+    <circle cx="332" cy="130" r="2.5" fill-opacity="0.4"/>
+    <circle cx="428" cy="130" r="2.5" fill-opacity="0.4"/>
+    <circle cx="380" cy="884" r="3" fill-opacity="0.4"/>
+  </g>
+  <path d="M300 884h56m48 0h56" stroke="#d4af37" stroke-opacity="0.3" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
