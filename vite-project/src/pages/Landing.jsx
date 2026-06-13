@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { QrCode, Wallet, Palette, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/auth-context'
+import { usePrice } from '../lib/usePrice'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import AppHeader from '../components/AppHeader'
@@ -51,6 +52,7 @@ const features = [
 
 export default function Landing() {
   const { session } = useAuth()
+  const { label: priceLabel } = usePrice()
   const cta = session ? '/dashboard' : '/login'
   return (
     <div className="min-h-svh">
@@ -66,7 +68,7 @@ export default function Landing() {
       <main className="mx-auto max-w-6xl px-4">
         <section className="grid items-center gap-12 py-14 md:py-20 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6 text-center lg:text-left">
-            <Badge variant="secondary">One-time $5 · no subscription</Badge>
+            <Badge variant="secondary">One-time {priceLabel} · no subscription</Badge>
             <h1 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
               Your business card,{' '}
               <span className="bg-gradient-to-r from-primary to-fuchsia-500 bg-clip-text text-transparent">
@@ -81,7 +83,7 @@ export default function Landing() {
               <Button asChild size="lg" className="max-sm:w-full">
                 <Link to={cta}>Create your card, it's free to design</Link>
               </Button>
-              <span className="text-sm text-muted-foreground">Pay $5 only when you publish</span>
+              <span className="text-sm text-muted-foreground">Pay {priceLabel} only when you publish</span>
             </div>
           </div>
           <div className="flex justify-center py-6">

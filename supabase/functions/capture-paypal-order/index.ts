@@ -1,6 +1,6 @@
 import { errorResponse, json, preflight } from '../_shared/http.ts'
 import { adminClient, getUser } from '../_shared/supabase.ts'
-import { CARD_PRICE, paypalAccessToken, paypalApiBase } from '../_shared/paypal.ts'
+import { paypalAccessToken, paypalApiBase } from '../_shared/paypal.ts'
 
 Deno.serve(async (req) => {
   const pre = preflight(req)
@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     const admin = adminClient()
     const { data: payment } = await admin
       .from('payments')
-      .select('id, card_id, user_id, status')
+      .select('id, card_id, user_id, status, amount_cents, currency')
       .eq('paypal_order_id', orderId)
       .single()
 
@@ -40,12 +40,14 @@ Deno.serve(async (req) => {
       return errorResponse('PayPal did not complete the payment', 402)
     }
 
-    // Never trust the client: re-verify what PayPal actually captured.
+    // Never trust the client: re-verify what PayPal actually captured against
+    // the amount recorded when the order was created (immune to price changes
+    // made mid-checkout in app_settings).
     const unit = capture.purchase_units?.[0]
     const captured = unit?.payments?.captures?.[0]
     const amountOk =
-      captured?.amount?.value === CARD_PRICE.value &&
-      captured?.amount?.currency_code === CARD_PRICE.currency_code
+      captured?.amount?.value === (payment.amount_cents / 100).toFixed(2) &&
+      captured?.amount?.currency_code === payment.currency
     const cardOk = unit?.reference_id === cardId
     if (!amountOk || !cardOk) {
       console.error('Capture verification failed', { amountOk, cardOk, capture })

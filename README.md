@@ -95,6 +95,20 @@ needed. Test it with [sandbox test cards](https://developer.paypal.com/tools/san
 On a live account, guest card processing availability depends on your PayPal account's
 country/eligibility — check Pay Later/alternative funding settings in your PayPal business account.
 
+## Changing the price
+
+The price lives in the `app_settings` table — change it from the Supabase dashboard
+(Table editor → `app_settings` → edit the `card_price` row) or via SQL:
+
+```sql
+update app_settings set value = '{"amount_cents": 400, "currency": "USD"}', updated_at = now()
+where key = 'card_price';
+```
+
+Takes effect immediately for new checkouts and on the next page load for displayed
+prices — no redeploys. Payments started before a price change are verified against
+the amount they were created with.
+
 ## Coupon codes (free publish)
 
 A coupon publishes a card for free (recorded in `payments` with `provider = 'coupon'`).

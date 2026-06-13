@@ -3,12 +3,14 @@ import { Link, useParams } from 'react-router-dom'
 import { UserPlus } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { downloadVCard } from '../lib/vcard'
+import { usePrice } from '../lib/usePrice'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import CardPreview from '../components/CardPreview'
 
 export default function PublicCard() {
   const { slug } = useParams()
+  const { label: priceLabel } = usePrice()
   const [card, setCard] = useState(null)
   const [state, setState] = useState('loading') // loading | ok | missing
 
@@ -85,7 +87,7 @@ export default function PublicCard() {
 
       <footer className="hidden pb-4 text-center text-xs text-muted-foreground sm:block">
         <Link to="/" className="hover:text-foreground">
-          Made with BizCard — create yours for $5
+          Made with BizCard — create yours for {priceLabel}
         </Link>
       </footer>
     </div>

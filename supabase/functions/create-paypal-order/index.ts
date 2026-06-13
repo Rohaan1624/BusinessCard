@@ -1,6 +1,6 @@
 import { errorResponse, json, preflight } from '../_shared/http.ts'
 import { adminClient, getUser } from '../_shared/supabase.ts'
-import { CARD_PRICE, paypalAccessToken, paypalApiBase } from '../_shared/paypal.ts'
+import { getCardPrice, paypalAccessToken, paypalApiBase } from '../_shared/paypal.ts'
 
 Deno.serve(async (req) => {
   const pre = preflight(req)
@@ -23,6 +23,7 @@ Deno.serve(async (req) => {
     if (!card || card.user_id !== user.id) return errorResponse('Card not found', 404)
     if (card.status === 'paid') return errorResponse('This card is already published', 409)
 
+    const price = await getCardPrice(admin)
     const token = await paypalAccessToken()
     const orderRes = await fetch(`${paypalApiBase()}/v2/checkout/orders`, {
       method: 'POST',
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
           {
             reference_id: card.id,
             description: `BizCard digital business card (${card.slug})`,
-            amount: CARD_PRICE,
+            amount: { value: price.value, currency_code: price.currency_code },
           },
         ],
       }),
@@ -49,8 +50,8 @@ Deno.serve(async (req) => {
       user_id: user.id,
       provider: 'paypal',
       paypal_order_id: order.id,
-      amount_cents: 500,
-      currency: CARD_PRICE.currency_code,
+      amount_cents: price.amount_cents,
+      currency: price.currency_code,
       status: 'pending',
     })
     if (insertError) {
@@ -61,6 +62,8 @@ Deno.serve(async (req) => {
     return json({ orderId: order.id })
   } catch (e) {
     console.error(e)
-    return errorResponse('Unexpected error', 500)
+    // Our own thrown errors are descriptive and safe to show (no secrets).
+    const message = e instanceof Error && e.message ? e.message : 'Unexpected error'
+    return errorResponse(message, 500)
   }
 })

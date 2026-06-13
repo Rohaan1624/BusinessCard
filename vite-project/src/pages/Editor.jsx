@@ -9,6 +9,7 @@ import { uploadCardImage } from '../lib/uploadImage'
 import { removeLogoBackground } from '../lib/removeBackground'
 import { downloadWalletPass } from '../lib/walletPass'
 import { useMediaQuery } from '../lib/useMediaQuery'
+import { usePrice } from '../lib/usePrice'
 import { ACCENT_SWATCHES, BG_SWATCHES, DEFAULT_THEME, LAYOUTS, logoSizePx } from '../lib/themes'
 import { TEMPLATES } from '../lib/templates'
 import { Button } from '@/components/ui/button'
@@ -114,6 +115,7 @@ export default function Editor() {
   const { cardId } = useParams()
   const { user } = useAuth()
   const isDesktop = useMediaQuery('(min-width: 1024px)')
+  const { label: priceLabel } = usePrice()
   const [card, setCard] = useState(null)
   const [loadError, setLoadError] = useState(null)
   const [saveState, setSaveState] = useState('saved') // saved | saving | error
@@ -844,7 +846,7 @@ export default function Editor() {
           ) : (
             <>
               <CardHeader>
-                <CardTitle>Publish your card — $5</CardTitle>
+                <CardTitle>Publish your card — {priceLabel}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
