@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Ban, Download, Eye, PencilLine, Trash2, Wallet, Wand2 } from 'lucide-react'
+import { Ban, Download, Palette, PencilLine, Send, Trash2, Wallet, Wand2 } from 'lucide-react'
 import { toPng } from 'html-to-image'
 import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
@@ -8,6 +8,7 @@ import { useAuth } from '../context/auth-context'
 import { uploadCardImage } from '../lib/uploadImage'
 import { removeLogoBackground } from '../lib/removeBackground'
 import { downloadWalletPass } from '../lib/walletPass'
+import { useMediaQuery } from '../lib/useMediaQuery'
 import { ACCENT_SWATCHES, BG_SWATCHES, DEFAULT_THEME, LAYOUTS, logoSizePx } from '../lib/themes'
 import { TEMPLATES } from '../lib/templates'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,9 @@ import { Separator } from '@/components/ui/separator'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from '@/components/ui/accordion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
@@ -39,6 +43,12 @@ const IMAGE_KINDS = [
   { kind: 'logo', label: 'Logo' },
   { kind: 'photo', label: 'Your photo' },
   { kind: 'bg_image', label: 'Background', maxDim: 1600 },
+]
+
+const MOBILE_TABS = [
+  { id: 'info', label: 'Info', icon: PencilLine },
+  { id: 'design', label: 'Design', icon: Palette },
+  { id: 'publish', label: 'Publish', icon: Send },
 ]
 
 function publicUrlFor(slug) {
@@ -103,13 +113,14 @@ function SwatchRow({ label, value, swatches, onChange }) {
 export default function Editor() {
   const { cardId } = useParams()
   const { user } = useAuth()
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
   const [card, setCard] = useState(null)
   const [loadError, setLoadError] = useState(null)
   const [saveState, setSaveState] = useState('saved') // saved | saving | error
   const [slugError, setSlugError] = useState(null)
-  const [uploading, setUploading] = useState(null) // 'logo' | 'photo' | null
+  const [uploading, setUploading] = useState(null) // image kind | 'logo-bg' | null
   const [walletBusy, setWalletBusy] = useState(false)
-  const [pane, setPane] = useState('edit') // mobile: 'edit' | 'preview'
+  const [tab, setTab] = useState('info') // mobile: info | design | publish
   const [snapshotBusy, setSnapshotBusy] = useState(false)
   const [showQR, setShowQR] = useState(false)
   const qrCardRef = useRef(null)
@@ -328,6 +339,531 @@ export default function Editor() {
   const isPaid = card.status === 'paid'
   const theme = { ...DEFAULT_THEME, ...card.theme }
 
+  // ---------- design controls (each used exactly once per layout) ----------
+
+  const templatesRow = (
+    <div className="space-y-2">
+      <span className="text-sm font-medium">Templates</span>
+      <div className="flex gap-3 overflow-x-auto pb-2">
+        <button type="button" onClick={clearTemplate} className="group w-24 shrink-0 text-center">
+          <span
+            className={`flex h-16 w-24 items-center justify-center rounded-lg bg-background ring-1 ring-border transition group-hover:ring-primary/60 ${
+              !card.bg_image_url ? 'ring-2 ring-primary' : ''
+            }`}
+          >
+            <Ban className="size-5 text-muted-foreground" />
+          </span>
+          <span className="mt-1 block truncate text-xs text-muted-foreground">None</span>
+        </button>
+        {TEMPLATES.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => applyTemplate(t)}
+            className="group w-24 shrink-0 text-center"
+          >
+            <img
+              src={t.bg}
+              alt={t.label}
+              loading="lazy"
+              className={`h-16 w-24 rounded-lg object-cover ring-1 ring-border transition group-hover:ring-primary/60 ${
+                card.bg_image_url === t.bg ? 'ring-2 ring-primary' : ''
+              }`}
+            />
+            <span className="mt-1 block truncate text-xs text-muted-foreground">{t.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+
+  const accentRow = (
+    <SwatchRow label="Accent" value={theme.accent} swatches={ACCENT_SWATCHES}
+      onChange={(v) => setTheme('accent', v)} />
+  )
+  const backgroundRow = (
+    <SwatchRow label="Background" value={theme.bg} swatches={BG_SWATCHES}
+      onChange={(v) => setTheme('bg', v)} />
+  )
+
+  const gradientControls = (
+    <>
+      <div className="flex items-center gap-3">
+        <span className="w-24 text-sm font-medium">Gradient</span>
+        <Switch
+          checked={!!theme.bg2}
+          onCheckedChange={(on) => setTheme('bg2', on ? theme.bg : null)}
+          aria-label="Gradient background"
+        />
+      </div>
+      {theme.bg2 && (
+        <SwatchRow label="Fade to" value={theme.bg2} swatches={BG_SWATCHES}
+          onChange={(v) => setTheme('bg2', v)} />
+      )}
+    </>
+  )
+
+  const bannerControls = theme.layout === 'banner' && (
+    <>
+      <SwatchRow
+        label="Top bar"
+        value={theme.bannerColor || theme.accent}
+        swatches={ACCENT_SWATCHES}
+        onChange={(v) => setTheme('bannerColor', v)}
+      />
+      <div className="flex items-center gap-3">
+        <span className="w-24 text-sm font-medium">Bar gradient</span>
+        <Switch
+          checked={theme.bannerGradient !== false}
+          onCheckedChange={(on) => setTheme('bannerGradient', on)}
+          aria-label="Top bar gradient"
+        />
+      </div>
+    </>
+  )
+
+  const imageDimControl = card.bg_image_url && (
+    <div className="flex items-center gap-3">
+      <span className="w-24 shrink-0 text-sm font-medium">Image dim</span>
+      <Slider
+        value={[theme.bgOverlay ?? 25]}
+        min={0} max={80} step={5}
+        onValueChange={([v]) => setTheme('bgOverlay', v)}
+        aria-label="Background image dim"
+        className="max-w-56"
+      />
+      <span className="w-10 text-right text-xs tabular-nums text-muted-foreground">
+        {theme.bgOverlay ?? 25}%
+      </span>
+    </div>
+  )
+
+  const textColorControl = (
+    <div className="flex flex-wrap items-center gap-3">
+      <span className="w-24 text-sm font-medium">Text color</span>
+      <div className="flex items-center gap-1.5">
+        <Button type="button" size="sm"
+          variant={theme.text === 'auto' ? 'default' : 'outline'}
+          onClick={() => setTheme('text', 'auto')}>
+          Auto
+        </Button>
+        <Button type="button" size="sm"
+          variant={theme.text !== 'auto' ? 'default' : 'outline'}
+          onClick={() => setTheme('text', theme.text === 'auto' ? '#111827' : theme.text)}>
+          Custom
+        </Button>
+        {theme.text !== 'auto' && (
+          <input
+            type="color"
+            value={theme.text}
+            onChange={(e) => setTheme('text', e.target.value)}
+            aria-label="Custom text color"
+            className="size-8 cursor-pointer rounded-md border bg-background p-0.5"
+          />
+        )}
+      </div>
+    </div>
+  )
+
+  const cornersControl = (
+    <div className="flex items-center gap-3">
+      <span className="w-24 shrink-0 text-sm font-medium">Corners</span>
+      <Slider
+        value={[theme.radius ?? 20]}
+        min={0} max={32} step={1}
+        onValueChange={([v]) => setTheme('radius', v)}
+        aria-label="Corner radius"
+        className="max-w-56"
+      />
+      <span className="w-10 text-right text-xs tabular-nums text-muted-foreground">
+        {theme.radius ?? 20}px
+      </span>
+    </div>
+  )
+
+  const fontField = (
+    <SelectField
+      id="font" label="Font"
+      value={theme.font} onChange={(v) => setTheme('font', v)}
+      options={[['sans', 'Modern (sans-serif)'], ['serif', 'Elegant (serif)'], ['mono', 'Technical (mono)']]}
+    />
+  )
+  const layoutField = (
+    <SelectField
+      id="layout" label="Layout"
+      value={theme.layout} onChange={(v) => setTheme('layout', v)}
+      options={LAYOUTS.map((l) => [l.id, l.label])}
+    />
+  )
+  const shadowField = (
+    <SelectField
+      id="shadow" label="Shadow"
+      value={theme.shadow} onChange={(v) => setTheme('shadow', v)}
+      options={[['none', 'None'], ['soft', 'Soft'], ['bold', 'Bold']]}
+    />
+  )
+  const contactStyleField = (
+    <SelectField
+      id="contactStyle" label="Contact style"
+      value={theme.contactStyle} onChange={(v) => setTheme('contactStyle', v)}
+      options={[['filled', 'Filled pills'], ['outline', 'Outlined'], ['text', 'Text links']]}
+    />
+  )
+  const photoShapeField = (
+    <SelectField
+      id="photoShape" label="Photo shape"
+      value={theme.photoShape} onChange={(v) => setTheme('photoShape', v)}
+      options={[['circle', 'Circle'], ['rounded', 'Rounded'], ['square', 'Square']]}
+    />
+  )
+  const photoSizeField = (
+    <SelectField
+      id="photoSize" label="Photo size"
+      value={theme.photoSize} onChange={(v) => setTheme('photoSize', v)}
+      options={[['sm', 'Small'], ['md', 'Medium'], ['lg', 'Large']]}
+    />
+  )
+
+  const logoSizeControl = card.logo_url && (
+    <div className="flex items-center gap-3">
+      <span className="w-24 shrink-0 text-sm font-medium">Logo size</span>
+      <Slider
+        value={[logoSizePx(theme.logoSize)]}
+        min={32} max={180} step={2}
+        onValueChange={([v]) => setTheme('logoSize', v)}
+        aria-label="Logo size"
+        className="max-w-56"
+      />
+      <span className="w-10 text-right text-xs tabular-nums text-muted-foreground">
+        {logoSizePx(theme.logoSize)}px
+      </span>
+    </div>
+  )
+
+  // ---------- panels ----------
+
+  function renderInfoSections() {
+    return (
+      <>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Identity <span className="text-sm font-normal text-muted-foreground">— everything is optional</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Field id="full_name" label="Full name">
+              <Input id="full_name" value={card.full_name || ''} onChange={set('full_name')} placeholder="Alex Rivera" />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field id="job_title" label="Job title">
+                <Input id="job_title" value={card.job_title || ''} onChange={set('job_title')} placeholder="Product Designer" />
+              </Field>
+              <Field id="company" label="Company">
+                <Input id="company" value={card.company || ''} onChange={set('company')} placeholder="Northwind Studio" />
+              </Field>
+            </div>
+            <Field id="bio" label="Short bio">
+              <Textarea id="bio" value={card.bio || ''} onChange={set('bio')} rows={2} maxLength={280}
+                placeholder="One or two lines about what you do" />
+            </Field>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Contact</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field id="phone" label="Phone">
+                <Input id="phone" value={card.phone || ''} onChange={set('phone')} placeholder="+1 (555) 010-2345" />
+              </Field>
+              <Field id="email" label="Email">
+                <Input id="email" value={card.email || ''} onChange={set('email')} placeholder="alex@example.com" />
+              </Field>
+            </div>
+            <Field id="website" label="Website">
+              <Input id="website" value={card.website || ''} onChange={set('website')} placeholder="example.com" />
+            </Field>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Social links</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {(card.socials || []).map((s, i) => (
+              <div className="flex gap-2" key={i}>
+                <Input
+                  value={s.label || ''}
+                  onChange={(e) => setSocial(i, 'label', e.target.value)}
+                  placeholder="LinkedIn"
+                  aria-label="Social label"
+                  className="max-w-32"
+                />
+                <Input
+                  value={s.url || ''}
+                  onChange={(e) => setSocial(i, 'url', e.target.value)}
+                  placeholder="https://linkedin.com/in/you"
+                  aria-label="Social URL"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Remove social link"
+                  onClick={() =>
+                    setCard((c) => ({ ...c, socials: c.socials.filter((_, j) => j !== i) }))
+                  }
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setCard((c) => ({ ...c, socials: [...(c.socials || []), { label: '', url: '' }] }))}
+            >
+              + Add link
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Images</CardTitle></CardHeader>
+          <CardContent className="grid gap-6 sm:grid-cols-3">
+            {IMAGE_KINDS.map(({ kind, label, maxDim }) => (
+              <div className="space-y-2" key={kind}>
+                <Label>{label}</Label>
+                {card[`${kind}_url`] ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={card[`${kind}_url`]}
+                        alt={label}
+                        className="size-16 rounded-lg border object-cover"
+                      />
+                      <Button type="button" variant="ghost" size="sm" onClick={() => applyAndSave({ [`${kind}_url`]: null })}>
+                        <Trash2 className="size-4" /> Remove
+                      </Button>
+                    </div>
+                    {kind === 'logo' && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={removeLogoBg}
+                        disabled={uploading !== null}
+                      >
+                        <Wand2 className="size-4" />
+                        {uploading === 'logo-bg' ? 'Working…' : 'Remove background'}
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <Button asChild type="button" variant="outline" disabled={uploading !== null}>
+                    <label className="cursor-pointer">
+                      {uploading === kind ? 'Uploading…' : 'Upload image'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        hidden
+                        disabled={uploading !== null}
+                        // eslint-disable-next-line react-hooks/refs -- handleUpload only touches cardRef at event time, never during render
+                        onChange={(e) => handleUpload(kind, e.target.files?.[0], maxDim)}
+                      />
+                    </label>
+                  </Button>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Card URL{' '}
+              {isPaid && (
+                <span className="text-sm font-normal text-muted-foreground">
+                  (locked after publishing — your printed QR stays valid)
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-stretch">
+              <span className="flex items-center whitespace-nowrap rounded-l-md border border-r-0 bg-muted px-3 text-sm text-muted-foreground">
+                {window.location.host}/c/
+              </span>
+              <Input
+                value={card.slug || ''}
+                disabled={isPaid}
+                className="rounded-l-none"
+                aria-label="Card URL slug"
+                onChange={(e) =>
+                  set('slug')(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 48))
+                }
+              />
+            </div>
+            {slugError && <p className="text-sm text-destructive">{slugError}</p>}
+          </CardContent>
+        </Card>
+      </>
+    )
+  }
+
+  function renderDesignPanel({ compact }) {
+    if (!compact) {
+      return (
+        <Card>
+          <CardHeader><CardTitle>Design</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            {templatesRow}
+            {accentRow}
+            {backgroundRow}
+            {gradientControls}
+            {bannerControls}
+            {imageDimControl}
+            {textColorControl}
+            {cornersControl}
+            <Separator />
+            <div className="grid gap-4 sm:grid-cols-2">
+              {fontField}
+              {layoutField}
+              {shadowField}
+              {contactStyleField}
+              {photoShapeField}
+              {photoSizeField}
+            </div>
+            {logoSizeControl}
+          </CardContent>
+        </Card>
+      )
+    }
+
+    // Mobile: live preview on top, the easy controls, everything else folded.
+    return (
+      <>
+        <div className="flex justify-center">
+          <CardPreview card={card} />
+        </div>
+        <Card>
+          <CardHeader><CardTitle>Design</CardTitle></CardHeader>
+          <CardContent className="space-y-5">
+            {templatesRow}
+            {accentRow}
+            {backgroundRow}
+            <div className="grid grid-cols-2 gap-4">
+              {fontField}
+              {layoutField}
+            </div>
+            <Accordion type="single" collapsible>
+              <AccordionItem value="advanced" className="border-none">
+                <AccordionTrigger className="py-2 text-sm font-medium">
+                  Advanced options
+                </AccordionTrigger>
+                <AccordionContent className="space-y-5 pt-2">
+                  {gradientControls}
+                  {bannerControls}
+                  {imageDimControl}
+                  {textColorControl}
+                  {cornersControl}
+                  <div className="grid grid-cols-2 gap-4">
+                    {shadowField}
+                    {contactStyleField}
+                    {photoShapeField}
+                    {photoSizeField}
+                  </div>
+                  {logoSizeControl}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+        </Card>
+      </>
+    )
+  }
+
+  function renderPublishPanel() {
+    return (
+      <>
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex rounded-lg bg-muted p-1">
+            <Button size="sm" variant={showQR ? 'ghost' : 'default'} onClick={() => setShowQR(false)}>
+              Card
+            </Button>
+            <Button size="sm" variant={showQR ? 'default' : 'ghost'} onClick={() => setShowQR(true)}>
+              With QR code
+            </Button>
+          </div>
+
+          {showQR ? (
+            <>
+              <div ref={qrCardRef} className="flex justify-center">
+                <CardWithQR card={card} locked={!isPaid} />
+              </div>
+              {isPaid && (
+                <Button variant="outline" onClick={downloadCardPng} disabled={snapshotBusy}>
+                  <Download className="size-4" />
+                  {snapshotBusy ? 'Rendering…' : 'Download card PNG'}
+                </Button>
+              )}
+            </>
+          ) : (
+            <CardPreview card={card} />
+          )}
+        </div>
+
+        <Card>
+          {isPaid ? (
+            <>
+              <CardHeader>
+                <CardTitle>Your card is live 🎉</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <a
+                  href={publicUrlFor(card.slug)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block truncate text-sm font-medium text-primary underline underline-offset-4"
+                >
+                  {publicUrlFor(card.slug).replace(/^https?:\/\//, '')}
+                </a>
+                <QRCodeBlock value={publicUrlFor(card.slug)} filename={`${card.slug}-qr`} />
+                <Button
+                  className="w-full bg-black text-white hover:bg-black/85"
+                  onClick={addToWallet}
+                  disabled={walletBusy}
+                >
+                  <Wallet className="size-4" />
+                  {walletBusy ? 'Preparing pass…' : 'Add to Apple Wallet'}
+                </Button>
+              </CardContent>
+            </>
+          ) : (
+            <>
+              <CardHeader>
+                <CardTitle>Publish your card — $5</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  One-time payment unlocks your public page, a print-ready QR code and the
+                  Apple Wallet pass. Pay with PayPal <em>or any credit/debit card</em> — no
+                  PayPal account needed. You can keep editing after publishing.
+                </p>
+                <QRCodeBlock value={publicUrlFor(card.slug)} locked />
+                <PayPalCheckout cardId={card.id} onPaid={refreshAfterPayment} />
+                <Separator />
+                <CouponRedeem cardId={card.id} onRedeemed={refreshAfterPayment} />
+              </CardContent>
+            </>
+          )}
+        </Card>
+      </>
+    )
+  }
+
   return (
     <div className="min-h-svh bg-muted/40">
       <AppHeader to="/dashboard" label="Dashboard">
@@ -339,500 +875,48 @@ export default function Editor() {
         </Badge>
       </AppHeader>
 
-      {/* Mobile pane switcher */}
-      <div className="sticky top-14 z-30 border-b bg-background p-2 lg:hidden">
-        <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
-          <Button
-            variant={pane === 'edit' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setPane('edit')}
-          >
-            <PencilLine className="size-4" /> Edit
-          </Button>
-          <Button
-            variant={pane === 'preview' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setPane('preview')}
-          >
-            <Eye className="size-4" /> Preview & publish
-          </Button>
+      {isDesktop ? (
+        <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+          <section className="min-w-0 space-y-5">
+            {renderInfoSections()}
+            {renderDesignPanel({ compact: false })}
+          </section>
+          <aside className="min-w-0 space-y-5 lg:sticky lg:top-20">
+            {renderPublishPanel()}
+          </aside>
         </div>
-      </div>
-
-      <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-8 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_420px]">
-        <section className={`min-w-0 space-y-5 ${pane === 'edit' ? 'block' : 'hidden'} lg:block`}>
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Identity <span className="text-sm font-normal text-muted-foreground">— everything is optional</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Field id="full_name" label="Full name">
-                <Input id="full_name" value={card.full_name || ''} onChange={set('full_name')} placeholder="Alex Rivera" />
-              </Field>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field id="job_title" label="Job title">
-                  <Input id="job_title" value={card.job_title || ''} onChange={set('job_title')} placeholder="Product Designer" />
-                </Field>
-                <Field id="company" label="Company">
-                  <Input id="company" value={card.company || ''} onChange={set('company')} placeholder="Northwind Studio" />
-                </Field>
-              </div>
-              <Field id="bio" label="Short bio">
-                <Textarea id="bio" value={card.bio || ''} onChange={set('bio')} rows={2} maxLength={280}
-                  placeholder="One or two lines about what you do" />
-              </Field>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>Contact</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field id="phone" label="Phone">
-                  <Input id="phone" value={card.phone || ''} onChange={set('phone')} placeholder="+1 (555) 010-2345" />
-                </Field>
-                <Field id="email" label="Email">
-                  <Input id="email" value={card.email || ''} onChange={set('email')} placeholder="alex@example.com" />
-                </Field>
-              </div>
-              <Field id="website" label="Website">
-                <Input id="website" value={card.website || ''} onChange={set('website')} placeholder="example.com" />
-              </Field>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>Social links</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              {(card.socials || []).map((s, i) => (
-                <div className="flex gap-2" key={i}>
-                  <Input
-                    value={s.label || ''}
-                    onChange={(e) => setSocial(i, 'label', e.target.value)}
-                    placeholder="LinkedIn"
-                    aria-label="Social label"
-                    className="max-w-32"
-                  />
-                  <Input
-                    value={s.url || ''}
-                    onChange={(e) => setSocial(i, 'url', e.target.value)}
-                    placeholder="https://linkedin.com/in/you"
-                    aria-label="Social URL"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Remove social link"
-                    onClick={() =>
-                      setCard((c) => ({ ...c, socials: c.socials.filter((_, j) => j !== i) }))
-                    }
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setCard((c) => ({ ...c, socials: [...(c.socials || []), { label: '', url: '' }] }))}
-              >
-                + Add link
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>Images</CardTitle></CardHeader>
-            <CardContent className="grid gap-6 sm:grid-cols-3">
-              {IMAGE_KINDS.map(({ kind, label, maxDim }) => (
-                <div className="space-y-2" key={kind}>
-                  <Label>{label}</Label>
-                  {card[`${kind}_url`] ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={card[`${kind}_url`]}
-                          alt={label}
-                          className="size-16 rounded-lg border object-cover"
-                        />
-                        <Button type="button" variant="ghost" size="sm" onClick={() => applyAndSave({ [`${kind}_url`]: null })}>
-                          <Trash2 className="size-4" /> Remove
-                        </Button>
-                      </div>
-                      {kind === 'logo' && (
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={removeLogoBg}
-                          disabled={uploading !== null}
-                        >
-                          <Wand2 className="size-4" />
-                          {uploading === 'logo-bg' ? 'Working…' : 'Remove background'}
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <Button asChild type="button" variant="outline" disabled={uploading !== null}>
-                      <label className="cursor-pointer">
-                        {uploading === kind ? 'Uploading…' : 'Upload image'}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          hidden
-                          disabled={uploading !== null}
-                          onChange={(e) => handleUpload(kind, e.target.files?.[0], maxDim)}
-                        />
-                      </label>
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>Design</CardTitle></CardHeader>
-            <CardContent className="space-y-5">
-              <div className="space-y-2">
-                <span className="text-sm font-medium">Templates</span>
-                <div className="flex gap-3 overflow-x-auto pb-2">
-                  <button
-                    type="button"
-                    onClick={clearTemplate}
-                    className="group w-24 shrink-0 text-center"
-                  >
-                    <span
-                      className={`flex h-16 w-24 items-center justify-center rounded-lg bg-background ring-1 ring-border transition group-hover:ring-primary/60 ${
-                        !card.bg_image_url ? 'ring-2 ring-primary' : ''
-                      }`}
-                    >
-                      <Ban className="size-5 text-muted-foreground" />
-                    </span>
-                    <span className="mt-1 block truncate text-xs text-muted-foreground">None</span>
-                  </button>
-                  {TEMPLATES.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => applyTemplate(t)}
-                      className="group w-24 shrink-0 text-center"
-                    >
-                      <img
-                        src={t.bg}
-                        alt={t.label}
-                        loading="lazy"
-                        className={`h-16 w-24 rounded-lg object-cover ring-1 ring-border transition group-hover:ring-primary/60 ${
-                          card.bg_image_url === t.bg ? 'ring-2 ring-primary' : ''
-                        }`}
-                      />
-                      <span className="mt-1 block truncate text-xs text-muted-foreground">
-                        {t.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <SwatchRow
-                label="Accent"
-                value={theme.accent}
-                swatches={ACCENT_SWATCHES}
-                onChange={(v) => setTheme('accent', v)}
-              />
-              <SwatchRow
-                label="Background"
-                value={theme.bg}
-                swatches={BG_SWATCHES}
-                onChange={(v) => setTheme('bg', v)}
-              />
-
-              <div className="flex items-center gap-3">
-                <span className="w-24 text-sm font-medium">Gradient</span>
-                <Switch
-                  checked={!!theme.bg2}
-                  onCheckedChange={(on) => setTheme('bg2', on ? theme.bg : null)}
-                  aria-label="Gradient background"
-                />
-              </div>
-              {theme.bg2 && (
-                <SwatchRow
-                  label="Fade to"
-                  value={theme.bg2}
-                  swatches={BG_SWATCHES}
-                  onChange={(v) => setTheme('bg2', v)}
-                />
-              )}
-
-              {theme.layout === 'banner' && (
-                <>
-                  <SwatchRow
-                    label="Top bar"
-                    value={theme.bannerColor || theme.accent}
-                    swatches={ACCENT_SWATCHES}
-                    onChange={(v) => setTheme('bannerColor', v)}
-                  />
-                  <div className="flex items-center gap-3">
-                    <span className="w-24 text-sm font-medium">Bar gradient</span>
-                    <Switch
-                      checked={theme.bannerGradient !== false}
-                      onCheckedChange={(on) => setTheme('bannerGradient', on)}
-                      aria-label="Top bar gradient"
-                    />
-                  </div>
-                </>
-              )}
-
-              {card.bg_image_url && (
-                <div className="flex items-center gap-3">
-                  <span className="w-24 shrink-0 text-sm font-medium">Image dim</span>
-                  <Slider
-                    value={[theme.bgOverlay ?? 25]}
-                    min={0}
-                    max={80}
-                    step={5}
-                    onValueChange={([v]) => setTheme('bgOverlay', v)}
-                    aria-label="Background image dim"
-                    className="max-w-56"
-                  />
-                  <span className="w-10 text-right text-xs tabular-nums text-muted-foreground">
-                    {theme.bgOverlay ?? 25}%
-                  </span>
-                </div>
-              )}
-
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="w-24 text-sm font-medium">Text color</span>
-                <div className="flex items-center gap-1.5">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={theme.text === 'auto' ? 'default' : 'outline'}
-                    onClick={() => setTheme('text', 'auto')}
-                  >
-                    Auto
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={theme.text !== 'auto' ? 'default' : 'outline'}
-                    onClick={() => setTheme('text', theme.text === 'auto' ? '#111827' : theme.text)}
-                  >
-                    Custom
-                  </Button>
-                  {theme.text !== 'auto' && (
-                    <input
-                      type="color"
-                      value={theme.text}
-                      onChange={(e) => setTheme('text', e.target.value)}
-                      aria-label="Custom text color"
-                      className="size-8 cursor-pointer rounded-md border bg-background p-0.5"
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="w-24 shrink-0 text-sm font-medium">Corners</span>
-                <Slider
-                  value={[theme.radius ?? 20]}
-                  min={0}
-                  max={32}
-                  step={1}
-                  onValueChange={([v]) => setTheme('radius', v)}
-                  aria-label="Corner radius"
-                  className="max-w-56"
-                />
-                <span className="w-10 text-right text-xs tabular-nums text-muted-foreground">
-                  {theme.radius ?? 20}px
-                </span>
-              </div>
-
-              <Separator />
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field id="font" label="Font">
-                  <Select value={theme.font} onValueChange={(v) => setTheme('font', v)}>
-                    <SelectTrigger id="font" className="w-full"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sans">Modern (sans-serif)</SelectItem>
-                      <SelectItem value="serif">Elegant (serif)</SelectItem>
-                      <SelectItem value="mono">Technical (mono)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field id="layout" label="Layout">
-                  <Select value={theme.layout} onValueChange={(v) => setTheme('layout', v)}>
-                    <SelectTrigger id="layout" className="w-full"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {LAYOUTS.map((l) => (
-                        <SelectItem key={l.id} value={l.id}>{l.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <SelectField
-                  id="shadow" label="Shadow"
-                  value={theme.shadow} onChange={(v) => setTheme('shadow', v)}
-                  options={[['none', 'None'], ['soft', 'Soft'], ['bold', 'Bold']]}
-                />
-                <SelectField
-                  id="contactStyle" label="Contact style"
-                  value={theme.contactStyle} onChange={(v) => setTheme('contactStyle', v)}
-                  options={[['filled', 'Filled pills'], ['outline', 'Outlined'], ['text', 'Text links']]}
-                />
-                <SelectField
-                  id="photoShape" label="Photo shape"
-                  value={theme.photoShape} onChange={(v) => setTheme('photoShape', v)}
-                  options={[['circle', 'Circle'], ['rounded', 'Rounded'], ['square', 'Square']]}
-                />
-                <SelectField
-                  id="photoSize" label="Photo size"
-                  value={theme.photoSize} onChange={(v) => setTheme('photoSize', v)}
-                  options={[['sm', 'Small'], ['md', 'Medium'], ['lg', 'Large']]}
-                />
-              </div>
-
-              {card.logo_url && (
-                <div className="flex items-center gap-3">
-                  <span className="w-24 shrink-0 text-sm font-medium">Logo size</span>
-                  <Slider
-                    value={[logoSizePx(theme.logoSize)]}
-                    min={32}
-                    max={180}
-                    step={2}
-                    onValueChange={([v]) => setTheme('logoSize', v)}
-                    aria-label="Logo size"
-                    className="max-w-56"
-                  />
-                  <span className="w-10 text-right text-xs tabular-nums text-muted-foreground">
-                    {logoSizePx(theme.logoSize)}px
-                  </span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Card URL{' '}
-                {isPaid && (
-                  <span className="text-sm font-normal text-muted-foreground">
-                    (locked after publishing — your printed QR stays valid)
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex items-stretch">
-                <span className="flex items-center whitespace-nowrap rounded-l-md border border-r-0 bg-muted px-3 text-sm text-muted-foreground">
-                  {window.location.host}/c/
-                </span>
-                <Input
-                  value={card.slug || ''}
-                  disabled={isPaid}
-                  className="rounded-l-none"
-                  aria-label="Card URL slug"
-                  onChange={(e) =>
-                    set('slug')(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 48))
-                  }
-                />
-              </div>
-              {slugError && <p className="text-sm text-destructive">{slugError}</p>}
-            </CardContent>
-          </Card>
-        </section>
-
-        <aside
-          className={`min-w-0 space-y-5 lg:sticky lg:top-20 ${pane === 'preview' ? 'block' : 'hidden'} lg:block`}
-        >
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex rounded-lg bg-muted p-1">
-              <Button
-                size="sm"
-                variant={showQR ? 'ghost' : 'default'}
-                onClick={() => setShowQR(false)}
-              >
-                Card
-              </Button>
-              <Button
-                size="sm"
-                variant={showQR ? 'default' : 'ghost'}
-                onClick={() => setShowQR(true)}
-              >
-                With QR code
-              </Button>
-            </div>
-
-            {showQR ? (
-              <>
-                <div ref={qrCardRef} className="flex justify-center">
-                  <CardWithQR card={card} locked={!isPaid} />
-                </div>
-                {isPaid && (
-                  <Button variant="outline" onClick={downloadCardPng} disabled={snapshotBusy}>
-                    <Download className="size-4" />
-                    {snapshotBusy ? 'Rendering…' : 'Download card PNG'}
-                  </Button>
-                )}
-              </>
-            ) : (
-              <CardPreview card={card} />
-            )}
+      ) : (
+        <>
+          <div className="mx-auto max-w-xl space-y-5 px-4 py-5 pb-28">
+            {tab === 'info' && renderInfoSections()}
+            {tab === 'design' && renderDesignPanel({ compact: true })}
+            {tab === 'publish' && renderPublishPanel()}
           </div>
 
-          <Card>
-            {isPaid ? (
-              <>
-                <CardHeader>
-                  <CardTitle>Your card is live 🎉</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <a
-                    href={publicUrlFor(card.slug)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block truncate text-sm font-medium text-primary underline underline-offset-4"
-                  >
-                    {publicUrlFor(card.slug).replace(/^https?:\/\//, '')}
-                  </a>
-                  <QRCodeBlock value={publicUrlFor(card.slug)} filename={`${card.slug}-qr`} />
-                  <Button
-                    className="w-full bg-black text-white hover:bg-black/85"
-                    onClick={addToWallet}
-                    disabled={walletBusy}
-                  >
-                    <Wallet className="size-4" />
-                    {walletBusy ? 'Preparing pass…' : 'Add to Apple Wallet'}
-                  </Button>
-                </CardContent>
-              </>
-            ) : (
-              <>
-                <CardHeader>
-                  <CardTitle>Publish your card — $5</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    One-time payment unlocks your public page, a print-ready QR code and the
-                    Apple Wallet pass. Pay with PayPal <em>or any credit/debit card</em> — no
-                    PayPal account needed. You can keep editing after publishing.
-                  </p>
-                  <QRCodeBlock value={publicUrlFor(card.slug)} locked />
-                  <PayPalCheckout cardId={card.id} onPaid={refreshAfterPayment} />
-                  <Separator />
-                  <CouponRedeem cardId={card.id} onRedeemed={refreshAfterPayment} />
-                </CardContent>
-              </>
-            )}
-          </Card>
-        </aside>
-      </div>
+          {/* Bottom tab bar */}
+          <nav
+            className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          >
+            <div className="grid h-16 grid-cols-3">
+              {MOBILE_TABS.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setTab(id)}
+                  className={`flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition ${
+                    tab === id ? 'text-primary' : 'text-muted-foreground'
+                  }`}
+                  aria-current={tab === id ? 'page' : undefined}
+                >
+                  <Icon className="size-5" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </nav>
+        </>
+      )}
     </div>
   )
 }
