@@ -889,34 +889,34 @@ export default function Editor() {
         </div>
       ) : (
         <>
-          <div className="mx-auto max-w-xl space-y-5 px-4 py-5 pb-28">
-            {tab === 'info' && renderInfoSections()}
-            {tab === 'design' && renderDesignPanel({ compact: true })}
-            {tab === 'publish' && renderPublishPanel()}
-          </div>
-
-          {/* Bottom tab bar */}
-          <nav
-            className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-          >
-            <div className="grid h-16 grid-cols-3">
+          {/* Tabs live in a sticky strip under the header (not a fixed bottom
+              bar) so PayPal's tall card form can never overlap them. */}
+          <nav className="sticky top-14 z-30 border-b bg-background/95 px-3 py-2 backdrop-blur">
+            <div className="mx-auto flex max-w-xl gap-1 rounded-lg bg-muted p-1">
               {MOBILE_TABS.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
                   type="button"
                   onClick={() => setTab(id)}
-                  className={`flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition ${
-                    tab === id ? 'text-primary' : 'text-muted-foreground'
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-2 text-sm font-medium transition ${
+                    tab === id
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground'
                   }`}
                   aria-current={tab === id ? 'page' : undefined}
                 >
-                  <Icon className="size-5" />
+                  <Icon className="size-4" />
                   {label}
                 </button>
               ))}
             </div>
           </nav>
+
+          <div className="mx-auto max-w-xl space-y-5 px-4 py-5">
+            {tab === 'info' && renderInfoSections()}
+            {tab === 'design' && renderDesignPanel({ compact: true })}
+            {tab === 'publish' && renderPublishPanel()}
+          </div>
         </>
       )}
     </div>

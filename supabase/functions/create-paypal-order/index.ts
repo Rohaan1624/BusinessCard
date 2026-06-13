@@ -37,6 +37,12 @@ Deno.serve(async (req) => {
             amount: { value: price.value, currency_code: price.currency_code },
           },
         ],
+        // Digital product — don't collect a shipping address. application_context
+        // applies to every funding source (PayPal wallet and guest card), unlike
+        // payment_source.paypal which would pin the funding source.
+        application_context: {
+          shipping_preference: 'NO_SHIPPING',
+        },
       }),
     })
     const order = await orderRes.json()
