@@ -66,6 +66,7 @@ export default function PublicCard() {
         <Button
           size="lg"
           className="hidden w-full max-w-sm sm:flex"
+          variant='black'
           onClick={() => downloadVCard(card, window.location.href)}
         >
           <UserPlus className="size-5" /> Save Contact
@@ -78,7 +79,8 @@ export default function PublicCard() {
       >
         <Button
           size="lg"
-          className="h-12 w-full text-base"
+          className="h-12 w-full text-base "
+          variant='black'
           onClick={() => downloadVCard(card, window.location.href)}
         >
           <UserPlus className="size-5" /> Save Contact
